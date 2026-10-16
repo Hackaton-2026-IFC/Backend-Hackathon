@@ -30,11 +30,8 @@ ALLOWED_HOSTS = ['*']
 # ============================================================
 
 FRONTEND_URLS = [
-    url.strip()
-    for url in os.getenv(
-        'FRONTEND_URLS',
-        'http://localhost:5173,http://127.0.0.1:5173'
-    ).split(',')
+    url.strip().rstrip('/')
+    for url in os.getenv('FRONTEND_URLS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
     if url.strip()
 ]
 
@@ -55,15 +52,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     # Terceiros
     'corsheaders',
     'django_extensions',
     'django_filters',
     'drf_spectacular',
     'rest_framework',
-
     # Aplicações do projeto
+    'uploader',
     'core',
 ]
 
@@ -210,20 +206,10 @@ AUTH_USER_MODEL = 'core.User'
 # ============================================================
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
-    ),
-
-    'DEFAULT_SCHEMA_CLASS':
-        'drf_spectacular.openapi.AutoSchema',
-
-    'DEFAULT_PAGINATION_CLASS':
-        'app.pagination.CustomPagination',
-
+    'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_simplejwt.authentication.JWTAuthentication',),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'app.pagination.CustomPagination',
     'PAGE_SIZE': 10,
 }
 
