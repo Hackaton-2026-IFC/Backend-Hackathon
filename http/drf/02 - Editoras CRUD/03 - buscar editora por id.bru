@@ -1,0 +1,22 @@
+meta {
+  name: 03 - Buscar editora por id (200)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/editoras/{{editora_id}}/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{editora_id}}
+  res.body.nome: isDefined
+}
+
+docs {
+GET /api/editoras/{id}/ — busca uma editora por id (requer seção 6).
+Defina a variável "editora_id" no ambiente Local com um id existente.
+}

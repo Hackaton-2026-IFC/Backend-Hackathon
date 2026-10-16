@@ -1,0 +1,28 @@
+meta {
+  name: 02 - Criar autor (401 em anônimo)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/autores/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nome": "Marta Santos",
+    "email": "marta@email.com"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+POST /api/autores/ — payload ensinado na seção 7 (nome e email).
+Email pode ser nulo. Escrita anônima é bloqueada (401) antes da seção 16;
+autenticado, a mesma requisição retorna 201.
+}

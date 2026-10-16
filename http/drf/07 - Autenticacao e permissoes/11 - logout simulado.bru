@@ -1,0 +1,22 @@
+meta {
+  name: 11 - logout simulado (401)
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/usuarios/me/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+Logout simulado (seção 18.7): no JWT não existe endpoint de logout.
+O cliente remove os tokens e para de enviar o header Authorization.
+Repetir uma request protegida SEM o header logo após o logout
+devolve novamente 401 — é isso que validamos aqui (auth: none).
+}

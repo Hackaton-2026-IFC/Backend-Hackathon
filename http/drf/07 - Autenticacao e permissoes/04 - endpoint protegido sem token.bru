@@ -1,0 +1,22 @@
+meta {
+  name: 04 - endpoint protegido sem token (401)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/usuarios/me/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+GET /api/usuarios/me/ — endpoint protegido (seções 17 e 18.2).
+Sem token, o backend responde 401 NotAuthenticated:
+"As credenciais de autenticação não foram fornecidas."
+(IsAuthenticated explícito na action me do UserViewSet.)
+}

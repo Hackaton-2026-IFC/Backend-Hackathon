@@ -1,0 +1,33 @@
+meta {
+  name: 15 - admin atualiza editora (200)
+  type: http
+  seq: 15
+}
+
+put {
+  url: {{baseUrl}}/api/editoras/{{editora_id}}/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_admin}}
+}
+
+body:json {
+  {
+    "nome": "Editora Demonstracao Atualizada {{$guid}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{editora_id}}
+  res.body.nome: contains Demonstracao Atualizada
+}
+
+docs {
+PUT /api/editoras/{{editora_id}}/ como admin1 (seção 18.8).
+Administradores têm change_editora → 200 e eco do id/nome.
+Reusa o id criado na request 14 (Save-as-variable).
+}

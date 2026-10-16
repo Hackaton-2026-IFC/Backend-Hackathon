@@ -1,0 +1,36 @@
+meta {
+  name: 03 - login comprador (200)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/token/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email_comprador}}",
+    "password": "{{password}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_token", res.body.access);
+  bru.setVar("refresh_token", res.body.refresh);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access: isDefined
+  res.body.refresh: isDefined
+}
+
+docs {
+POST /api/token/ — autentica e devolve access + refresh (seções 16 e 18.2).
+O login é feito 1x por sessão e reutilizado pelo bearer da coleção
+(Save-as-variable). Pré-condição: usuário comprador1@a.com e grupo
+compradores criados na seção 16 via Admin.
+}

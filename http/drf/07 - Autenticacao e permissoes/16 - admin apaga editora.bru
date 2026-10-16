@@ -1,0 +1,25 @@
+meta {
+  name: 16 - admin apaga editora (204)
+  type: http
+  seq: 16
+}
+
+delete {
+  url: {{baseUrl}}/api/editoras/{{editora_id}}/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_admin}}
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+DELETE /api/editoras/{{editora_id}}/ como admin1.
+Administradores têm delete_editora → 204. Remove apenas o registro
+criado pela própria pasta (request 14), sem afetar dados de referência.
+}

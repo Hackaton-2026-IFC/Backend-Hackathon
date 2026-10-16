@@ -1,0 +1,29 @@
+meta {
+  name: 04 - consultar compra criada (200)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/compras/{{compra_id}}/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_superuser}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{compra_id}}
+  res.body.itens: isDefined
+  res.body.itens[0].titulo: eq {{titulo_livro_compra}}
+  res.body.itens[0].quantidade: eq 1
+}
+
+docs {
+  GET /api/compras/{{compra_id}}/ — consulta de detalhes da compra criada (seções 23–26).
+  Valida que o endpoint de detalhe retorna a compra associada ao `compra_id` capturado dinamicamente.
+  Verifica se os itens aninhados exibem os dados detalhados do livro (título, editora, preço) e totais calculados.
+}

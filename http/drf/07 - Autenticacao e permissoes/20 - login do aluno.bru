@@ -1,0 +1,33 @@
+meta {
+  name: 20 - login do aluno (200)
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/token/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email_aluno}}",
+    "password": "{{password}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_aluno", res.body.access);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access: isDefined
+}
+
+docs {
+POST /api/token/ — login do usuário criado na request 01 (seção 18).
+Confirma que o usuário registrado autentica normalmente e captura o
+token para validar a foto de perfil (request 21).
+}

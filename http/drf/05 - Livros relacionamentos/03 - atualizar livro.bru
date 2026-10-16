@@ -1,0 +1,33 @@
+meta {
+  name: 03 - Atualizar livro (401 em anônimo)
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/livros/{{livro_id}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "titulo": "Dominando o Django (2a edicao)",
+    "isbn": "978-85-001",
+    "quantidade": 15,
+    "preco": 69.9,
+    "categoria": {{categoria_id}},
+    "editora": {{editora_id}},
+    "autores": [{{autor_id}}]
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+PUT /api/livros/{id}/ — escrita usa o serializer "achatado" (seção 11),
+mesmo com relacionamentos. Escrita anônima é bloqueada (401) antes da
+seção 16; autenticado, retorna 200.
+}

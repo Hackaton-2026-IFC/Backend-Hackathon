@@ -1,0 +1,47 @@
+meta {
+  name: 03 - criar compra com itens aninhados (201)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/compras/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_superuser}}
+}
+
+body:json {
+  {
+    "usuario": "{{id_aluno}}",
+    "itens": [
+      {
+        "livro": "{{livro_compra_id}}",
+        "quantidade": 1
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.usuario: eq {{id_aluno}}
+  res.body.itens: isDefined
+  res.body.itens[0].livro: eq {{livro_compra_id}}
+  res.body.itens[0].quantidade: eq 1
+}
+
+script:post-response {
+  bru.setVar("compra_id", res.body.id);
+}
+
+docs {
+  POST /api/compras/ — criação de compra com itens aninhados (seção 27).
+  Submete payload contendo a chave explícita `usuario` e a lista de `itens`.
+  A variável `id_aluno` é obtida no cadastro de usuário da pasta 07 (01 - registra novo usuario.bru).
+  A resposta 201 Created retorna o objeto contendo `id`, alimentando diretamente `compra_id` via `bru.setVar('compra_id', res.body.id)`.
+}

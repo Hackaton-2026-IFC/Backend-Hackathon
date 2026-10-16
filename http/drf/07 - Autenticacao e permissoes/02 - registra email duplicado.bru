@@ -1,0 +1,30 @@
+meta {
+  name: 02 - registra email duplicado (400)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/registro/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email_aluno}}",
+    "name": "Aluno Teste",
+    "password": "{{password}}"
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+docs {
+POST /api/registro/ — e-mail já cadastrado (seção 18.1).
+O tutorial: "se tentar cadastrar um e-mail já existente, receberá uma
+mensagem de erro informando que o usuário já está em uso."
+Usa o e-mail capturado na request 01 (Save-as-variable).
+}

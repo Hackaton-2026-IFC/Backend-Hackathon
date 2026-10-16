@@ -1,0 +1,38 @@
+meta {
+  name: 06 - atualizar compra parcialmente (200)
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/compras/{{compra_id}}/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_superuser}}
+}
+
+body:json {
+  {
+    "itens": [
+      {
+        "livro": "{{livro_compra_id}}",
+        "quantidade": 5
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{compra_id}}
+  res.body.itens: isDefined
+  res.body.itens[0].quantidade: eq 5
+}
+
+docs {
+  PATCH /api/compras/{{compra_id}}/ — atualização parcial da compra via API (seção 28).
+  Atualiza parcialmente os dados da compra (por exemplo, modificando a quantidade dos itens).
+}

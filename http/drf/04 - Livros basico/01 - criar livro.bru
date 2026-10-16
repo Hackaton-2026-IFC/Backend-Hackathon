@@ -1,0 +1,30 @@
+meta {
+  name: 01 - Criar livro (401 em anônimo)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/livros/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "titulo": "Dominando o Django",
+    "isbn": "978-85-001",
+    "quantidade": 10,
+    "preco": 59.9
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+POST /api/livros/ — payload da seção 8, sem relacionamentos
+(titulo, isbn, quantidade, preco). Escrita anônima é bloqueada (401) antes
+da seção 16; autenticado, a mesma requisição retorna 201.
+}

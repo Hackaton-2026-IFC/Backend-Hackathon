@@ -1,0 +1,29 @@
+meta {
+  name: 18 - lista imagens do uploader (200)
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/media/images/
+  body: none
+  auth: none
+}
+
+script:post-response {
+  if (res.body.results && res.body.results.length > 0) {
+    bru.setVar("image_key", res.body.results[0].attachment_key);
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/media/images/ — lista imagens enviadas pelo uploader.
+PRÉ-CONDIÇÃO de dados: é necessário ter enviado ao menos 1 imagem
+(seção 12/folder 06); a request 19 usa a primeira imagem encontrada
+via Save-as-variable para anexá-la ao perfil (seção 19).
+}

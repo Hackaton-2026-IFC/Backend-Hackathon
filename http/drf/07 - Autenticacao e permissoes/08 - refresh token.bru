@@ -1,0 +1,32 @@
+meta {
+  name: 08 - refresh token (200)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/token/refresh/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "refresh": "{{refresh_token}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_token", res.body.access);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access: isDefined
+}
+
+docs {
+POST /api/token/refresh/ — novos access a partir do refresh (seção 18.5).
+O novo access substitui o access_token capturado; as próximas requests
+que herdam o bearer da coleção já usam o token renovado.
+}

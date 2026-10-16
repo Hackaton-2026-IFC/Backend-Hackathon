@@ -1,0 +1,21 @@
+meta {
+  name: 01 - Listar categorias (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/categorias/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/categorias/ — lista as categorias (paginado; requer seção 4).
+Anônimo tem leitura liberada; nunca asserir contagem fixa.
+}

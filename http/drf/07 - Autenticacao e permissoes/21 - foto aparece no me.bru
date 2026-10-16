@@ -1,0 +1,27 @@
+meta {
+  name: 21 - foto aparece no me (200)
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/usuarios/me/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_aluno}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.email: eq {{email_aluno}}
+  res.body.foto: isDefined
+}
+
+docs {
+GET /api/usuarios/me/ como o aluno — a foto anexada na request 19
+aparece agora no campo foto (seção 19). Confirma o ciclo completo:
+registro → login → anexar foto → leitura do perfil com foto.
+}

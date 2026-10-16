@@ -1,0 +1,47 @@
+meta {
+  name: 02 - criar livro para compra (201)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/livros/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_superuser}}
+}
+
+body:json {
+  {
+    "titulo": "Livro Compra Teste {{$guid}}",
+    "quantidade": 10,
+    "preco": "29.90",
+    "categoria": 1,
+    "editora": 1,
+    "autores": [
+      1
+    ]
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.titulo: isDefined
+  res.body.quantidade: gt 0
+}
+
+script:post-response {
+  bru.setVar("livro_compra_id", res.body.id);
+  bru.setVar("titulo_livro_compra", res.body.titulo);
+}
+
+docs {
+  POST /api/livros/ — criação de livro próprio de apoio para os testes de compra.
+  Garante autonomia e reexecutabilidade da coleção sem depender de livros pré-existentes.
+  Utiliza token de superuser obtido na pasta 07 (17 - login superuser.bru).
+  Salva as variáveis `livro_compra_id` e `titulo_livro_compra` para uso nas requisições seguintes.
+}

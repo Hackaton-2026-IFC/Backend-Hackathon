@@ -1,0 +1,34 @@
+meta {
+  name: 13 - login admin (200)
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/token/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email_admin}}",
+    "password": "{{password}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_admin", res.body.access);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access: isDefined
+}
+
+docs {
+POST /api/token/ — login do admin1@a.com (seção 16 e 18.8).
+Token salvo em variável própria (access_admin) para não sobrescrever
+o access_token do comprador usado pelo bearer da coleção.
+Pré-condição: usuário admin1@a.com no grupo administradores (seção 16).
+}

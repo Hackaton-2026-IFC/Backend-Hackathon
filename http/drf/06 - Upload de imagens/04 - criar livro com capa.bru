@@ -1,0 +1,55 @@
+meta {
+  name: 04 - criar livro com capa (201)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/livros/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token_upload}}
+}
+
+body:json {
+  {
+    "titulo": "Capa {{$guid}}",
+    "quantidade": 1,
+    "preco": 50,
+    "capa_attachment_key": "{{image_key_capa}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("livro_capa_id", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.capa: isDefined
+}
+
+docs {
+POST /api/livros/ — cria um livro com capa associada via
+"capa_attachment_key" (seção 12). Valida o fluxo ponta a ponta:
+
+  upload (03) → attachment_key → criação do livro com capa.
+
+Sem ID fixo: título único via {{$guid}} e o id do livro capturado em
+"livro_capa_id". Categoria, editora e autores são opcionais no backend;
+por isso esta request não depende de IDs ou de dados criados por pastas
+anteriores.
+
+PRÉ-CONDIÇÃO: request 03 executada (image_key_capa). A chave deve ser um
+UUID existente em uploader_image; chave inválida → 400.
+
+DIVERGÊNCIA (tutorial × backend): a seção 12 apresenta a criação do
+livro com capa sem autenticação. No backend atual a criação exige
+autenticação e permissão add_livro (401 anônimo; 403 comprador sem
+add_livro; 201 admin/superuser). O token técnico valida o comportamento
+real; JWT é ensinado na seção 16 (pasta 07).
+}

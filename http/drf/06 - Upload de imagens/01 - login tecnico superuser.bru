@@ -1,0 +1,42 @@
+meta {
+  name: 01 - login técnico superuser (200)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/token/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email_superuser}}",
+    "password": "{{password}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_token_upload", res.body.access);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access: isDefined
+}
+
+docs {
+POST /api/token/ — LOGIN TÉCNICO da pasta 06 (não é conteúdo pedagógico).
+
+A seção 12 do tutorial apresenta o upload sem autenticação. O backend
+atual, entretanto, exige autenticação para operações de escrita. O token
+obtido aqui existe exclusivamente para permitir a validação técnica da
+API e NÃO representa a introdução pedagógica de JWT na seção 12. A
+autenticação é ensinada formalmente na seção 16 (pasta 07).
+
+O access token é salvo em "access_token_upload" (variável própria da
+pasta). NÃO reutilizamos {{access_token}} da coleção — essa variável
+pertence à convenção pedagógica da pasta 07. Nenhum refresh é capturado
+(desnecessário para o fluxo de upload).
+}

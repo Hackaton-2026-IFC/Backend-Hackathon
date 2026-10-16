@@ -1,0 +1,50 @@
+meta {
+  name: 03 - enviar imagem (201)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/media/images/
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token_upload}}
+}
+
+body:multipart-form {
+  file: @file(../../core.png)
+}
+
+script:post-response {
+  bru.setVar("image_key_capa", res.body.attachment_key);
+  bru.setVar("image_url_capa", res.body.url);
+}
+
+assert {
+  res.status: eq 201
+  res.body.attachment_key: isDefined
+  res.body.url: isDefined
+}
+
+docs {
+POST /api/media/images/ — envia a imagem (form-data, campo "file") e
+recebe attachment_key + url (seção 12). Fixture: core.png (diagrama da
+app, na raiz do template), caminho relativo à raiz da coleção.
+
+O attachment_key é salvo em "image_key_capa" e a url em "image_url_capa"
+(variáveis próprias da pasta 06; NÃO usamos image_key da pasta 07).
+
+PRÉ-CONDIÇÃO: request 01 executada (access_token_upload) e core.png
+presente na raiz do template.
+
+DIVERGÊNCIA (tutorial × backend) — comportamento real:
+- POST anônimo      → 401 (não autenticado);
+- POST comprador    → 403 (grupo compradores não tem add_image);
+- POST admin        → 403 (grupo administradores não tem add_image);
+- POST superuser    → 201 (somente o superuser tem add_image).
+O token técnico desta pasta existe apenas para validar a API real; JWT
+continua sendo ensinado pedagogicamente na seção 16 (pasta 07).
+}

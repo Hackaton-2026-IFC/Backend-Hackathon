@@ -1,0 +1,27 @@
+meta {
+  name: 02 - Criar categoria (401 em anônimo)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/categorias/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "descricao": "Ficcao Cientifica"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+POST /api/categorias/ — payload ensinado na seção 4 (campo descricao).
+No template, escrita anônima é bloqueada (401) antes da seção 16:
+autenticado (pasta 07), a mesma requisição retorna 201.
+}

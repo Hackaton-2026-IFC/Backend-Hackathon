@@ -1,0 +1,26 @@
+meta {
+  name: 10 - verify token invalido (401)
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/token/verify/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "token": "token-invalido"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+POST /api/token/verify/ com token inválido (seção 18.6).
+Token quebrado → 401 (code token_not_valid), não 200.
+}

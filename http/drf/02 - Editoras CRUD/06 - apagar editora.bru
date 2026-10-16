@@ -1,0 +1,21 @@
+meta {
+  name: 06 - Apagar editora (401 em anônimo)
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/editoras/{{editora_id}}/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+DELETE /api/editoras/{id}/ — exclusão ensinada na seção 6.
+Escrita anônima é bloqueada (401) antes da seção 16;
+autenticado, a exclusão retorna 204.
+}

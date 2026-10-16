@@ -1,0 +1,34 @@
+meta {
+  name: 17 - login superuser (200)
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/token/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email_superuser}}",
+    "password": "{{password}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_superuser", res.body.access);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access: isDefined
+}
+
+docs {
+POST /api/token/ — login do a@a.com (superuser do template/tutorial).
+Necessário para a seção 19: editar um usuário (PATCH /api/usuarios/)
+exige permissões de User (change_user), que o admin da seção 16 não tem
+(403 confirmado). O superuser tem todas as permissões por padrão.
+}

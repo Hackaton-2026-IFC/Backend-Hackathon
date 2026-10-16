@@ -1,0 +1,38 @@
+meta {
+  name: 14 - admin cria editora (201)
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/editoras/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_admin}}
+}
+
+body:json {
+  {
+    "nome": "Editora Demonstracao {{$guid}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("editora_id", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.nome: isDefined
+}
+
+docs {
+POST /api/editoras/ autenticado como admin1 (seção 18.8).
+Administradores têm add_editora → 201. A mesma escrita anônima (07)
+devolvia 401; sem permissão (12) devolve 403.
+Nome dinâmico + id capturado para as requests 15 e 16.
+}

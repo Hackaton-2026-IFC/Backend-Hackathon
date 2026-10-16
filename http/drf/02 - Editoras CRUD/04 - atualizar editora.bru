@@ -1,0 +1,26 @@
+meta {
+  name: 04 - Atualizar editora (401 em anônimo)
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/editoras/{{editora_id}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nome": "Editora Alfa (atualizada)"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+PUT /api/editoras/{id}/ — atualização com o payload da seção 6.
+Escrita anônima é bloqueada (401) antes da seção 16; autenticado, retorna 200.
+}

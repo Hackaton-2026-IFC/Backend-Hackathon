@@ -1,0 +1,26 @@
+meta {
+  name: 09 - verify token (200)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/token/verify/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "token": "{{access_token}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+POST /api/token/verify/ — verifica se o token é válido (seção 18.6).
+200 {} = token válido. Valida o access renovado pela request 08.
+}

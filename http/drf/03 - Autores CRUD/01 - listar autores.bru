@@ -1,0 +1,21 @@
+meta {
+  name: 01 - Listar autores (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/autores/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/autores/ — lista os autores (paginado; requer seção 7).
+Anônimo tem leitura liberada; nunca asserir contagem fixa.
+}

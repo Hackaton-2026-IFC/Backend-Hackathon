@@ -1,0 +1,22 @@
+meta {
+  name: 03 - Buscar autor por id (200)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/autores/{{autor_id}}/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{autor_id}}
+  res.body.nome: isDefined
+}
+
+docs {
+GET /api/autores/{id}/ — busca um autor por id (requer seção 7).
+Defina a variável "autor_id" no ambiente Local com um id existente.
+}

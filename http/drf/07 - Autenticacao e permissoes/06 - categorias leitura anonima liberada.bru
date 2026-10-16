@@ -1,0 +1,26 @@
+meta {
+  name: 06 - categorias leitura anonima liberada (200)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/categorias/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/categorias/ sem token — seções 17 e 18.2.
+
+DIVERGÊNCIA TUTORIAL × BACKEND: o tutorial (18.2) mostra esse GET
+anônimo retornando 401, mas com DjangoModelPermissionsOrAnonReadOnly
+(c) em settings.py o acesso anônimo de LEITURA é liberado (200).
+A coleção registra o comportamento real (C+B) — leitura pública,
+escrita bloqueada (ver request 07).
+}

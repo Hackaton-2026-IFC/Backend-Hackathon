@@ -1,0 +1,35 @@
+meta {
+  name: 19 - anexa foto ao perfil (200)
+  type: http
+  seq: 19
+}
+
+patch {
+  url: {{baseUrl}}/api/usuarios/{{id_aluno}}/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_superuser}}
+}
+
+body:json {
+  {
+    "foto_attachment_key": "{{image_key}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{id_aluno}}
+  res.body.foto: isDefined
+}
+
+docs {
+PATCH /api/usuarios/{{id_aluno}}/ — inclui foto de perfil via API
+(seção 19): envia foto_attachment_key (write_only) e a resposta volta
+com foto (read_only) preenchida.
+Usa o superuser: editar usuários exige change_user, que o admin da
+seção 16 não possui (403).
+}

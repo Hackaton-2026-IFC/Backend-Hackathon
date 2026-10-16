@@ -1,0 +1,23 @@
+meta {
+  name: 03 - Buscar categoria por id (200)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/categorias/{{categoria_id}}/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{categoria_id}}
+  res.body.descricao: isDefined
+}
+
+docs {
+GET /api/categorias/{id}/ — busca uma categoria por id (requer seção 4).
+Defina a variável "categoria_id" no ambiente Local com um id existente
+(cadastre pelo Admin; na seção 16 o id pode vir de um POST autenticado).
+}

@@ -1,0 +1,21 @@
+meta {
+  name: 01 - Listar editoras (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/editoras/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/editoras/ — lista as editoras (paginado; requer seção 6).
+Anônimo tem leitura liberada; nunca asserir contagem fixa.
+}

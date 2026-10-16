@@ -1,0 +1,22 @@
+meta {
+  name: 01 - listar compras (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/compras/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+  GET /api/compras/ — listagem básica de compras (seções 23–26).
+  Retorna HTTP 200 e objeto paginado contendo a chave `results`.
+  Não exige autenticação no estágio pedagógico inicial das seções 20–28.
+}

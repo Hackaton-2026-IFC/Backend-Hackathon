@@ -1,0 +1,21 @@
+meta {
+  name: 02 - Listar livros (200)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/livros/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/livros/ — lista os livros (paginado; requer seção 8).
+Anônimo tem leitura liberada; nunca asserir contagem fixa.
+}

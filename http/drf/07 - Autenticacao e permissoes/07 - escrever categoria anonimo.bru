@@ -1,0 +1,28 @@
+meta {
+  name: 07 - escrever categoria anonimo (401)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/categorias/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "descricao": "Categoria anonima"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+POST /api/categorias/ anônimo — seções 17 e 18.8.
+Escrita exige autenticação: sem token o DRF devolve 401
+(NotAuthenticated, não 403), pois o JWT é o único autenticador.
+A mesma escrita autenticada com permissão retorna 201 (request 12).
+}

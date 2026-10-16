@@ -1,0 +1,28 @@
+meta {
+  name: 05 - usuarios me com token (200)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/usuarios/me/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.email: eq {{email_comprador}}
+  res.body.foto: isDefined
+}
+
+docs {
+GET /api/usuarios/me/ — dados do usuário associado ao token (seção 18.4).
+Envia explicitamente o bearer com {{access_token}} (capturado no login).
+A presença do campo foto valida o serializer da seção 19
+(UserSerializer com foto / foto_attachment_key).
+}

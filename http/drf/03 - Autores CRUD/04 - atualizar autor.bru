@@ -1,0 +1,27 @@
+meta {
+  name: 04 - Atualizar autor (401 em anônimo)
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/autores/{{autor_id}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nome": "Marta Santos",
+    "email": "marta@novoemail.com"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+PUT /api/autores/{id}/ — atualização com o payload da seção 7.
+Escrita anônima é bloqueada (401) antes da seção 16; autenticado, retorna 200.
+}

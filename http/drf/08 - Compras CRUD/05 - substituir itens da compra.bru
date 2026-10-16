@@ -1,0 +1,40 @@
+meta {
+  name: 05 - substituir itens da compra (200)
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/compras/{{compra_id}}/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_superuser}}
+}
+
+body:json {
+  {
+    "usuario": "{{id_aluno}}",
+    "itens": [
+      {
+        "livro": "{{livro_compra_id}}",
+        "quantidade": 3
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{compra_id}}
+  res.body.itens: isDefined
+  res.body.itens[0].livro: eq {{livro_compra_id}}
+  res.body.itens[0].quantidade: eq 3
+}
+
+docs {
+  PUT /api/compras/{{compra_id}}/ — substituição completa dos itens da compra via API (seção 28).
+  Atualiza a compra substituindo a lista de itens. O método `update()` do serializer executa `compra.itens.all().delete()` e recria os novos itens recebidos no payload.
+}

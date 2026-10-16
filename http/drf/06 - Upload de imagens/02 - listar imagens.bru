@@ -1,0 +1,34 @@
+meta {
+  name: 02 - listar imagens (200)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/media/images/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token_upload}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+}
+
+docs {
+GET /api/media/images/ — lista as imagens enviadas pelo uploader
+(seção 12). Resposta paginada com "results"; nunca asserir contagem
+fixa (o número de imagens varia conforme execuções anteriores).
+
+A leitura anônima é liberada (200), mas usamos o token técnico da pasta
+para manter o fluxo consistente com as demais requests autenticadas.
+
+DIVERGÊNCIA (tutorial × backend): a seção 12 ensina o upload sem login,
+mas o backend atual exige autenticação nas escritas. O token desta pasta
+é mecanismo técnico de validação, não a introdução pedagógica de JWT
+(que ocorre na seção 16 / pasta 07).
+}

@@ -1,0 +1,20 @@
+meta {
+  name: 05 - Buscar autor inexistente (404)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/autores/0/
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+docs {
+GET /api/autores/0/ — id 0 nunca existe (Django inicia em 1); 404
+determinístico e monotônico para validar o retrieve sem depender de dados.
+}

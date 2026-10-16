@@ -1,0 +1,36 @@
+meta {
+  name: 12 - comprador escreve editora (403)
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/editoras/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "nome": "Editora Bloqueada"
+  }
+}
+
+assert {
+  res.status: eq 403
+}
+
+docs {
+POST /api/editoras/ autenticado como comprador1 (seção 18.8).
+Comprador não possui add_editora → 403 (permissão negada), mesmo
+autenticado. Exemplo do tutorial: comprador tenta PUT e recebe erro.
+
+ATENÇÃO (divergência): o tutorial sugere testar PUT /api/categorias/10/
+com o comprador, mas no backend de referência o grupo compradores tem
+permissões em Categoria — por isso usamos Editora (sem permissão em
+ambas as referências, tutorial × backend).
+}

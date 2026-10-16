@@ -1,0 +1,39 @@
+meta {
+  name: 05 - consultar livro com capa (200)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/livros/{{livro_capa_id}}/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token_upload}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{livro_capa_id}}
+  res.body.capa: isDefined
+  res.body.capa.url: eq {{image_url_capa}}
+}
+
+docs {
+GET /api/livros/{id}/ — recupera o livro criado na request 04 e confirma
+que a capa está associada (seção 12).
+
+A resposta de leitura (LivroRetrieveSerializer) NÃO expõe
+attachment_key no objeto capa (só url, description, uploaded_on).
+Portanto, a correspondência é validada pela URL: "capa.url" deve ser
+idêntica à "url" retornada pelo upload (request 03 → image_url_capa).
+Comprova que upload → attachment_key → livro com capa funcionou.
+
+PRÉ-CONDIÇÃO: request 04 executada (livro_capa_id).
+
+DIVERGÊNCIA (tutorial × backend): leitura anônima é liberada (200); o
+token técnico é usado apenas para consistência. JWT continua sendo
+ensinado pedagogicamente na seção 16 (pasta 07).
+}

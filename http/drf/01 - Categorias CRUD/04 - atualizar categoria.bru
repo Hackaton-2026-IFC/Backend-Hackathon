@@ -1,0 +1,26 @@
+meta {
+  name: 04 - Atualizar categoria (401 em anônimo)
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/categorias/{{categoria_id}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "descricao": "Ficcao Cientifica e Fantasia"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+docs {
+PUT /api/categorias/{id}/ — atualização com o payload da seção 4.
+Escrita anônima é bloqueada (401) antes da seção 16; autenticado, retorna 200.
+}
