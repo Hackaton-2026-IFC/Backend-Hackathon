@@ -11,16 +11,23 @@ from rest_framework_simplejwt.views import (
 )
 
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    default_error_messages = {
+        **TokenObtainPairSerializer.default_error_messages,
+        'no_active_account': 'Não foi encontrada uma conta ativa com as credenciais informadas.',
+    }
+
+
 @extend_schema_view(
     post=extend_schema(
         summary="Obter token JWT",
         description="Autentica com e-mail e senha. Retorna access token e refresh token.",
-        request=TokenObtainPairSerializer,
+        request=CustomTokenObtainPairSerializer,
         responses={200: TokenObtainPairSerializer, 401: None},
     )
 )
 class CustomTokenObtainPairView(TokenObtainPairView):
-    pass
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 @extend_schema_view(
