@@ -13,11 +13,11 @@ class UserAdmin(BaseUserAdmin):
     """Define the admin pages for users."""
 
     ordering = ('id',)
-    list_display = ('email', 'name')
-    search_fields = ('email', 'name', 'groups__name')
+    list_display = ('email', 'name', 'username', 'profile_image')
+    search_fields = ('email', 'name', 'username', 'groups__name')
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        (_('Personal Info'), {'fields': ('name',)}),
+        (_('Personal Info'), {'fields': ('name', 'username', 'profile_image')}),
         (
             _('Permissions'),
             {
@@ -43,6 +43,8 @@ class UserAdmin(BaseUserAdmin):
                     'password1',
                     'password2',
                     'name',
+                    'username',
+                    'profile_image',
                     'is_active',
                     'is_staff',
                     'is_superuser',
@@ -50,6 +52,5 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
-
 
 admin.site.register(models.User, UserAdmin)
