@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from uploader.helpers.files import CONTENT_TYPE_JPG, CONTENT_TYPE_PNG
+from uploader.helpers.files import MAX_IMAGE_UPLOAD_SIZE, MAX_VIDEO_UPLOAD_SIZE, get_content_type
 from uploader.models import Image
 
 
@@ -12,9 +12,20 @@ class ImageUploadSerializer(serializers.ModelSerializer):
         extra_kwargs = {"file": {"write_only": True}}
 
     def validate_file(self, value):
-        valid_content_types = [CONTENT_TYPE_JPG, CONTENT_TYPE_PNG]
-        if value.content_type not in valid_content_types:
-            raise serializers.ValidationError("Invalid or corrupted image.")
+        content_type = get_content_type(value)
+        if content_type.startswith("image/"):
+            max_size = MAX_IMAGE_UPLOAD_SIZE
+            media_type = "image"
+        elif content_type.startswith("video/"):
+            max_size = MAX_VIDEO_UPLOAD_SIZE
+            media_type = "video"
+        else:
+            raise serializers.ValidationError("Only valid image and video files are allowed.")
+
+        if value.size > max_size:
+            max_size_mb = max_size // (1024 * 1024)
+            raise serializers.ValidationError(f"The {media_type} file must be at most {max_size_mb} MB.")
+
         return value
 
 
