@@ -33,7 +33,7 @@ pillow==12.3.0
 platformdirs==4.12.4
 pre-commit==4.6.2
 psycopg2-binary==2.9.13
-pydotplus==2.0.2
+pydot==4.0.1
 pyjwt==2.15.1
 pyparsing==3.3.3
 python-discovery==1.6.3
