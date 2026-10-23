@@ -81,11 +81,12 @@ class ProjetoViewSet(ModelViewSet):
         if usuario is None:
             raise ValidationError({'usuario': 'Usuário não encontrado.'})
 
-        if cargo not in dict(ProjetoMembro.CARGO_CHOICES):
-            raise ValidationError({'cargo': 'Cargo inválido.'})
+        # O cargo de proprietário não pode ser concedido por esta rota.
+        if cargo != ProjetoMembro.CARGO_ADMIN:
+            raise ValidationError({'cargo': 'Esta rota só permite adicionar administradores.'})
 
-        if usuario == request.user and cargo == ProjetoMembro.CARGO_ADMIN:
-            pass
+        if projeto.membros.filter(usuario=usuario, cargo=ProjetoMembro.CARGO_OWNER).exists():
+            raise ValidationError({'usuario': 'Não é permitido rebaixar o proprietário do projeto.'})
 
         membro, created = ProjetoMembro.objects.get_or_create(
             projeto=projeto,

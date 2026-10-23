@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 
 from core.models import Projeto, ProjetoMembro
@@ -17,7 +18,6 @@ class ProjetoMembroSerializer(serializers.ModelSerializer):
 
 class ProjetoSerializer(serializers.ModelSerializer):
     criador = serializers.PrimaryKeyRelatedField(read_only=True)
-    criador_hidden = serializers.HiddenField(default=serializers.CurrentUserDefault(), source='criador')
     icone = serializers.ChoiceField(choices=Projeto.ICON_CHOICES, required=False, allow_blank=True)
     participantes = serializers.SerializerMethodField()
 
@@ -31,7 +31,6 @@ class ProjetoSerializer(serializers.ModelSerializer):
             'icone',
             'data_criacao',
             'criador',
-            'criador_hidden',
             'participantes',
         ]
         read_only_fields = ['id', 'data_criacao', 'criador', 'participantes']
@@ -39,6 +38,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
     def get_participantes(self, obj):
         return ProjetoMembroSerializer(obj.membros.all(), many=True).data
 
+    @transaction.atomic
     def create(self, validated_data):
         projeto = Projeto.objects.create(**validated_data)
         ProjetoMembro.objects.create(projeto=projeto, usuario=projeto.criador, cargo=ProjetoMembro.CARGO_OWNER)

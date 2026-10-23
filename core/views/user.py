@@ -2,18 +2,37 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import User
 from core.serializers import UserRegistrationSerializer, UserSerializer
+from core.serializers.user import UserDirectorySerializer
 
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    # Cadastro é feito somente por /api/registro/. Exclusão fica desabilitada.
+    http_method_names = ['get', 'put', 'patch', 'head', 'options']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return UserDirectorySerializer
+        return self.serializer_class
+
+    def retrieve(self, request, *args, **kwargs):
+        if self.get_object().pk != request.user.pk:
+            raise PermissionDenied('Você só pode consultar seu próprio perfil.')
+        return super().retrieve(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        if serializer.instance.pk != self.request.user.pk:
+            raise PermissionDenied('Você só pode alterar o seu próprio perfil.')
+        serializer.save()
 
     @extend_schema(
         summary="Dados do usuário autenticado",
