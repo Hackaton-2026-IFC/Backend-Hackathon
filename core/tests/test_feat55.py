@@ -33,14 +33,14 @@ class NotaKeepTests(TestCase):
         self.assertEqual(created.data['cor'], '#AABBCC')
 
         note_id = created.data['id']
-        self.assertEqual(self.client.get('/api/notas/?search=Transformar').data['count'], 1)
+        self.assertEqual(len(self.client.get('/api/notas/?search=Transformar').data['results']), 1)
         self.assertEqual(
             self.client.patch(f'/api/notas/{note_id}/', {'arquivada': True}, format='json').status_code,
             200,
         )
 
         self.client.force_authenticate(user=self.outro)
-        self.assertEqual(self.client.get('/api/notas/').data['count'], 0)
+        self.assertEqual(len(self.client.get('/api/notas/').data['results']), 0)
         self.assertEqual(self.client.get(f'/api/notas/{note_id}/').status_code, 404)
 
     def test_nao_vincula_nota_a_projeto_alheio(self):
