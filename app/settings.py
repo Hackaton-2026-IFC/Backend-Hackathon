@@ -223,8 +223,8 @@ REST_FRAMEWORK = {
 # ============================================================
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': '<PROJETO> API',
-    'DESCRIPTION': 'API para o projeto <descreva aqui seu projeto>.',
+    'TITLE': 'Hackathon 2026 API',
+    'DESCRIPTION': 'Gerenciamento colaborativo de projetos, membros, tarefas, Kanban, prazos e recursos.',
     'VERSION': '1.0.0',
 }
 

@@ -43,8 +43,6 @@ class MicroTarefaSerializer(serializers.ModelSerializer):
         elif any(item.concluida for item in posteriores):
             raise serializers.ValidationError({'concluida': 'Reabra as etapas posteriores primeiro.'})
 
-        if any(item.concluida for item in anteriores) and any(not item.concluida for item in anteriores):
-            raise serializers.ValidationError({'ordem': 'A sequência de etapas está inconsistente.'})
         if any(item.concluida for item in posteriores) and not concluida:
             raise serializers.ValidationError({'ordem': 'Não é possível colocar uma etapa pendente antes de uma concluída.'})
 
