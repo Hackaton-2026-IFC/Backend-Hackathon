@@ -34,6 +34,7 @@ class Projeto(models.Model):
     nome = models.CharField(max_length=100)
     data_criacao = models.DateField(auto_now_add=True)
     data_limite = models.DateField(null=True, blank=True)
+    prazo_antecipado = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PLANEJADO)
     descricao = models.TextField(blank=True, null=True)
     cor = models.CharField(max_length=7, default='#FFFFFF')
@@ -69,3 +70,13 @@ class ProjetoMembro(models.Model):
 
     def __str__(self):
         return f'{self.usuario} ({self.cargo})'
+
+class ProjetoFixado(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='projetos_fixados')
+    projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='fixacoes')
+    fixado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'projeto'], name='projeto_fixado_por_usuario_unico')
+        ]

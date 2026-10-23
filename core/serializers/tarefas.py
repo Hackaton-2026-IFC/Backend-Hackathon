@@ -9,6 +9,7 @@ class TarefaSerializer(serializers.ModelSerializer):
     criado_por = serializers.PrimaryKeyRelatedField(read_only=True)
     microtarefas = MicroTarefaSerializer(many=True, read_only=True)
     status = serializers.ChoiceField(choices=Tarefa.STATUS_CHOICES, required=False)
+    urgencia = serializers.SerializerMethodField()
     dependencias = serializers.PrimaryKeyRelatedField(queryset=Tarefa.objects.all(), many=True, required=False)
 
     class Meta:
@@ -16,9 +17,13 @@ class TarefaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'projeto', 'titulo', 'descricao', 'prioridade', 'status',
             'dependencias', 'responsavel', 'criado_por', 'concluida',
-            'data_criacao', 'data_limite', 'microtarefas',
+            'data_criacao', 'data_limite', 'prazo_antecipado',
+            'urgencia', 'urgencia_manual', 'microtarefas',
         ]
         read_only_fields = ['id', 'data_criacao', 'criado_por', 'microtarefas']
+
+    def get_urgencia(self, obj):
+        return obj.urgencia
 
     def validate(self, attrs):
         request = self.context.get('request')
@@ -28,6 +33,13 @@ class TarefaSerializer(serializers.ModelSerializer):
         projeto = attrs.get('projeto', getattr(self.instance, 'projeto', None))
         if projeto is None or not projeto.membros.filter(usuario=request.user).exists():
             raise serializers.ValidationError({'projeto': 'Você não participa deste projeto.'})
+
+        prazo_oficial = attrs.get('data_limite', getattr(self.instance, 'data_limite', None))
+        antecipado = attrs.get('prazo_antecipado', getattr(self.instance, 'prazo_antecipado', None))
+        if antecipado and not prazo_oficial:
+            raise serializers.ValidationError({'prazo_antecipado': 'Informe o prazo oficial antes do antecipado.'})
+        if antecipado and antecipado > prazo_oficial:
+            raise serializers.ValidationError({'prazo_antecipado': 'O prazo antecipado não pode ultrapassar o oficial.'})
 
         responsavel = attrs.get('responsavel', getattr(self.instance, 'responsavel', None))
         if responsavel is not None and not projeto.membros.filter(usuario=responsavel).exists():

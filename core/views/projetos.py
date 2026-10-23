@@ -1,14 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from core.models import Projeto, ProjetoMembro
-from core.serializers import ProjetoMembroSerializer, ProjetoSerializer
+from core.models import Projeto, ProjetoMembro, ProjetoFixado, Tarefa
+from core.serializers import ProjetoMembroSerializer, ProjetoSerializer, TarefaSerializer
 
 User = get_user_model()
 
@@ -27,7 +28,10 @@ class ProjetoViewSet(ModelViewSet):
         return membro.cargo in {ProjetoMembro.CARGO_OWNER, ProjetoMembro.CARGO_ADMIN}
 
     def get_queryset(self):
-        return Projeto.objects.filter(membros__usuario=self.request.user).distinct().order_by('-data_criacao')
+        fixados = ProjetoFixado.objects.filter(projeto_id=OuterRef('pk'), usuario=self.request.user)
+        return (Projeto.objects.filter(membros__usuario=self.request.user)
+                .annotate(fixado_usuario=Exists(fixados))
+                .distinct().order_by('-fixado_usuario', '-data_criacao', '-id'))
 
     def get_object(self):
         try:
@@ -59,6 +63,41 @@ class ProjetoViewSet(ModelViewSet):
         if membro is None or membro.cargo != ProjetoMembro.CARGO_OWNER:
             raise PermissionDenied('Apenas o owner pode excluir o projeto.')
         return super().destroy(request, *args, **kwargs)
+
+
+    @action(detail=True, methods=['get'], url_path='kanban')
+    def kanban(self, request, pk=None):
+        """Kanban e progresso das tarefas de um projeto acessível ao usuário."""
+        projeto = self.get_object()
+        tarefas = list(
+            Tarefa.objects.filter(projeto=projeto)
+            .prefetch_related('dependencias', 'microtarefas')
+            .order_by('-data_criacao', '-id')
+        )
+        colunas = {status: [] for status, _ in Tarefa.STATUS_CHOICES}
+        for tarefa in tarefas:
+            colunas[tarefa.status].append(
+                TarefaSerializer(tarefa, context={'request': request}).data
+            )
+
+        total = len(tarefas)
+        concluidas = len(colunas[Tarefa.STATUS_CONCLUIDO])
+        return Response({
+            'projeto': projeto.pk,
+            'progresso': round(concluidas * 100 / total, 2) if total else 0,
+            'total_tarefas': total,
+            'tarefas_concluidas': concluidas,
+            'kanban': colunas,
+        })
+
+    @action(detail=True, methods=['post', 'delete'], url_path='fixar')
+    def fixar(self, request, pk=None):
+        projeto = self.get_object()
+        if request.method == 'POST':
+            ProjetoFixado.objects.get_or_create(usuario=request.user, projeto=projeto)
+            return Response({'fixado': True})
+        ProjetoFixado.objects.filter(usuario=request.user, projeto=projeto).delete()
+        return Response({'fixado': False})
 
     @action(detail=False, methods=['get'], url_path='meus-projetos')
     def meus_projetos(self, request):
