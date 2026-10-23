@@ -2,6 +2,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 import dj_database_url
 from dotenv import load_dotenv
 
@@ -23,7 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure')
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = ['*']
+if not DEBUG and SECRET_KEY in ('', 'django-insecure'):
+    raise ImproperlyConfigured('Configure uma SECRET_KEY segura em produção.')
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '*').split(',') if host.strip()]
 
 # ============================================================
 # Frontend autorizado
@@ -234,38 +238,3 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# ============================================================
-# Informações de configuração (debug)
-# ============================================================
-
-print('=' * 70)
-print('CONFIGURAÇÃO DA APLICAÇÃO')
-print('=' * 70)
-
-print(f'DEBUG....................: {DEBUG if DEBUG else "NÃO DEFINIDO"}')
-print(f'SECRET_KEY...............: {SECRET_KEY if SECRET_KEY else "NÃO DEFINIDA"}')
-
-print()
-
-print(f'DATABASE ENGINE.............: {DATABASES["default"]["ENGINE"]}')
-print(f'DATABASE NAME...............: {DATABASES["default"]["NAME"]}')
-
-print()
-
-print(f'FRONTEND_URLS ({len(FRONTEND_URLS)}).......: {FRONTEND_URLS}')
-print(f'CORS_ALLOWED_ORIGINS....: {CORS_ALLOWED_ORIGINS}')
-print(f'CSRF_TRUSTED_ORIGINS....: {CSRF_TRUSTED_ORIGINS}')
-
-print()
-
-print(f'MEDIA_URL...............: {MEDIA_URL}')
-print(f'MEDIA_ROOT..............: {MEDIA_ROOT}')
-
-print()
-
-print(f'CLOUDINARY..............: {"SIM" if CLOUDINARY_URL else "NÃO"}')
-
-if CLOUDINARY_URL:
-    print(f'CLOUDINARY_URL..........: {CLOUDINARY_URL}')
-
-print('=' * 70)
