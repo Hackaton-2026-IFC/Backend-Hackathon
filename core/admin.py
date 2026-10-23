@@ -7,11 +7,13 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 
 from core import models
+from core.forms import CustomUserChangeForm
 
 
 class UserAdmin(BaseUserAdmin):
     """Define the admin pages for users."""
 
+    form = CustomUserChangeForm
     ordering = ('id',)
     list_display = ('email', 'name', 'username', 'profile_image')
     search_fields = ('email', 'name', 'username', 'groups__name')
