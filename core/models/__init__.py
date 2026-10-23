@@ -8,3 +8,5 @@ from .user import User
 from .recursos import Recurso
 
 from .google_identity import GoogleIdentity
+
+from .calendar_event import CalendarEvent
