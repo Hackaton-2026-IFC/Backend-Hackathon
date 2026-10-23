@@ -1,4 +1,7 @@
 from datetime import timedelta
+from unittest.mock import Mock, patch
+from rest_framework_simplejwt.tokens import RefreshToken
+from core.models.google_identity import GoogleIdentity
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
@@ -52,3 +55,46 @@ class CalendarTests(TestCase):
             'hora_inicio': '14:00', 'hora_fim': '13:00',
         }, format='json')
         self.assertEqual(response.status_code, 400)
+
+    @patch('core.views.calendario.requests.post')
+    @patch('core.views.calendario.requests.get')
+    def test_google_export_requires_matching_account(self, get, post):
+        GoogleIdentity.objects.create(user=self.owner, sub='google-sub')
+        event = CalendarEvent.objects.create(projeto=self.project, titulo='Apresentação', data=timezone.localdate())
+        token = RefreshToken.for_user(self.owner)
+        token['auth_provider'] = 'google'
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        info = Mock(status_code=200)
+        info.raise_for_status.return_value = None
+        info.json.return_value = {'scope': 'openid https://www.googleapis.com/auth/calendar.events'}
+        who = Mock(status_code=200)
+        who.raise_for_status.return_value = None
+        who.json.return_value = {'sub': 'google-sub'}
+        get.side_effect = [info, who]
+        sent = Mock(status_code=201)
+        sent.json.return_value = {'id': 'event-g', 'htmlLink': 'https://calendar.google.com/event'}
+        post.return_value = sent
+        result = self.client.post(f'/api/projetos/{self.project.pk}/google-agenda/',
+                                  {'evento': event.pk, 'access_token': 'valid'}, format='json')
+        self.assertEqual(result.status_code, 201)
+        self.assertEqual(result.data['id'], 'event-g')
+
+    @patch('core.views.calendario.requests.get')
+    def test_google_export_rejects_another_google_account(self, get):
+        GoogleIdentity.objects.create(user=self.owner, sub='owner-sub')
+        event = CalendarEvent.objects.create(projeto=self.project, titulo='Reunião', data=timezone.localdate())
+        token = RefreshToken.for_user(self.owner)
+        token['auth_provider'] = 'google'
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        info = Mock(status_code=200)
+        info.raise_for_status.return_value = None
+        info.json.return_value = {'scope': 'openid https://www.googleapis.com/auth/calendar.events'}
+        who = Mock(status_code=200)
+        who.raise_for_status.return_value = None
+        who.json.return_value = {'sub': 'attacker-sub'}
+        get.side_effect = [info, who]
+        result = self.client.post(f'/api/projetos/{self.project.pk}/google-agenda/',
+                                  {'evento': event.pk, 'access_token': 'valid'}, format='json')
+        self.assertEqual(result.status_code, 403)
