@@ -1,12 +1,12 @@
 from django.http import Http404
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import Tarefa
-from core.serializers import TarefaSerializer
+from core.serializers import TarefaSerializer, RecursoSerializer
 
 
 class TarefaViewSet(ModelViewSet):
@@ -42,6 +42,19 @@ class TarefaViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         self.get_object()
         return super().destroy(request, *args, **kwargs)
+
+
+    @action(detail=True, methods=['get', 'post'], url_path='recursos')
+    def recursos(self, request, pk=None):
+        """Lista ou adiciona links de apoio vinculados à tarefa."""
+        tarefa = self.get_object()
+        if request.method == 'GET':
+            recursos = tarefa.recursos.select_related('adicionado_por').all()
+            return Response(RecursoSerializer(recursos, many=True, context={'request': request}).data)
+        serializer = RecursoSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(projeto=tarefa.projeto, tarefa=tarefa, adicionado_por=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], url_path='kanban')
     def kanban(self, request):
