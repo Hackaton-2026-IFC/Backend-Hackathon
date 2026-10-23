@@ -14,3 +14,5 @@ from .calendar_event import CalendarEvent
 from .atividade import Atividade
 
 from .comentario_tarefa import ComentarioTarefa
+
+from .nota import Nota
