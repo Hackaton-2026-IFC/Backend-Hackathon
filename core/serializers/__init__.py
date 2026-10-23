@@ -6,3 +6,4 @@ from .tarefas import TarefaSerializer
 from .user import UserRegistrationSerializer, UserSerializer
 
 from .recursos import RecursoSerializer
+from .notas import NotaSerializer

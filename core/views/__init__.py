@@ -7,3 +7,4 @@ from .token import CustomTokenObtainPairView, CustomTokenRefreshView, CustomToke
 from .user import UserRegistrationView, UserViewSet
 
 from .recursos import RecursoViewSet
+from .notas import NotaViewSet
