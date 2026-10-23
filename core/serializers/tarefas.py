@@ -9,6 +9,7 @@ class TarefaSerializer(serializers.ModelSerializer):
     criado_por = serializers.PrimaryKeyRelatedField(read_only=True)
     microtarefas = MicroTarefaSerializer(many=True, read_only=True)
     status = serializers.ChoiceField(choices=Tarefa.STATUS_CHOICES, required=False)
+    urgencia = serializers.SerializerMethodField()
     dependencias = serializers.PrimaryKeyRelatedField(queryset=Tarefa.objects.all(), many=True, required=False)
 
     class Meta:
@@ -16,9 +17,13 @@ class TarefaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'projeto', 'titulo', 'descricao', 'prioridade', 'status',
             'dependencias', 'responsavel', 'criado_por', 'concluida',
-            'data_criacao', 'data_limite', 'prazo_antecipado', 'microtarefas',
+            'data_criacao', 'data_limite', 'prazo_antecipado',
+            'urgencia', 'urgencia_manual', 'microtarefas',
         ]
         read_only_fields = ['id', 'data_criacao', 'criado_por', 'microtarefas']
+
+    def get_urgencia(self, obj):
+        return obj.urgencia
 
     def validate(self, attrs):
         request = self.context.get('request')
