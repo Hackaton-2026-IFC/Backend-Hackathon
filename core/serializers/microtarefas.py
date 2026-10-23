@@ -29,6 +29,8 @@ class MicroTarefaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'ordem': 'A ordem deve ser maior que zero.'})
 
         concluida = attrs.get('concluida', getattr(self.instance, 'concluida', False))
+        if not concluida and tarefa.tarefas_dependentes.filter(status=Tarefa.STATUS_CONCLUIDO).exists():
+            raise serializers.ValidationError({'concluida': 'Reabra primeiro as tarefas que dependem desta.'})
         outras = list(tarefa.microtarefas.exclude(pk=self.instance.pk if self.instance else None))
         anteriores = [item for item in outras if item.ordem < ordem]
         posteriores = [item for item in outras if item.ordem > ordem]
