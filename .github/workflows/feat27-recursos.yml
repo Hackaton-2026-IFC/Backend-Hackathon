@@ -1,0 +1,29 @@
+name: Testes FEAT-27 (recursos)
+on:
+  pull_request:
+    paths:
+      - 'core/**'
+      - 'app/urls.py'
+      - 'pyproject.toml'
+      - 'pdm.lock'
+      - '.github/workflows/feat27-recursos.yml'
+  push:
+    branches: [FEAT-27]
+jobs:
+  testes-recursos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar PDM
+        run: python -m pip install pdm
+      - name: Instalar dependências
+        run: pdm install
+      - name: Conferir migrações
+        run: pdm run python manage.py makemigrations --check --dry-run
+      - name: Validar projeto Django
+        run: pdm run python manage.py check
+      - name: Testar recursos vinculados
+        run: pdm run python manage.py test core.tests.test_recursos --verbosity 2
