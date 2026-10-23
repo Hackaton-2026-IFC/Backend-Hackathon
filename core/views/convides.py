@@ -42,6 +42,11 @@ class ConviteProjetoViewSet(ModelViewSet):
         ).exists():
             raise PermissionDenied('Apenas proprietário e administradores podem enviar convites.')
 
+        ator = projeto.membros.get(usuario=self.request.user)
+        cargo = serializer.validated_data.get('cargo', ProjetoMembro.CARGO_ADMIN)
+        if ator.cargo == ProjetoMembro.CARGO_ADMIN and cargo != ProjetoMembro.CARGO_MEMBER:
+            raise PermissionDenied('Administradores só podem convidar membros comuns.')
+
         if projeto.membros.filter(usuario=usuario).exists():
             raise ValidationError({'usuario': 'Este usuário já faz parte do projeto.'})
 

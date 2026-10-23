@@ -66,13 +66,13 @@ class SecurityRegressionTests(TestCase):
             {'usuario': self.admin.id, 'cargo': 'owner'},
             format='json',
         )
-        self.assertEqual(elevation.status_code, 400)
+        self.assertEqual(elevation.status_code, 403)
         demotion = self.client.post(
             f'/api/projetos/{project_id}/adicionar-membro/',
             {'usuario': self.owner.id, 'cargo': 'admin'},
             format='json',
         )
-        self.assertEqual(demotion.status_code, 400)
+        self.assertEqual(demotion.status_code, 403)
 
         self.assertTrue(
             ProjetoMembro.objects.filter(projeto_id=project_id, usuario=self.owner, cargo='owner').exists()

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.http import Http404
+from django.db import transaction
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -65,38 +66,84 @@ class ProjetoViewSet(ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'], url_path='membros')
+    def listar_membros(self, request, pk=None):
+        projeto = self.get_object()
+        membros = projeto.membros.select_related('usuario').order_by('id')
+        return Response(ProjetoMembroSerializer(membros, many=True).data)
+
     @action(detail=True, methods=['post'], url_path='adicionar-membro')
     def adicionar_membro(self, request, pk=None):
+        # Rota de compatibilidade com o frontend atual.
+        # Somente o proprietário pode incluir administradores diretamente.
         projeto = self.get_object()
-        if not self._pode_editar_projeto(projeto, request.user):
-            raise PermissionDenied('Apenas o owner ou admin podem gerenciar membros.')
+        ator = self._get_membro(projeto, request.user)
+        if not ator or ator.cargo != ProjetoMembro.CARGO_OWNER:
+            raise PermissionDenied('Somente o proprietário pode adicionar administradores diretamente.')
 
-        usuario_id = request.data.get('usuario')
-        cargo = request.data.get('cargo', ProjetoMembro.CARGO_ADMIN)
-
-        if not usuario_id:
-            raise ValidationError({'usuario': 'Informe o usuário.'})
-
-        usuario = User.objects.filter(pk=usuario_id).first()
+        usuario = User.objects.filter(pk=request.data.get('usuario')).first()
         if usuario is None:
             raise ValidationError({'usuario': 'Usuário não encontrado.'})
+        cargo = request.data.get('cargo', ProjetoMembro.CARGO_ADMIN)
+        if cargo not in {ProjetoMembro.CARGO_ADMIN, ProjetoMembro.CARGO_MEMBER}:
+            raise ValidationError({'cargo': 'Cargo inválido.'})
+        if projeto.membros.filter(usuario=usuario).exists():
+            raise ValidationError({'usuario': 'Este usuário já participa do projeto.'})
+        membro = ProjetoMembro.objects.create(projeto=projeto, usuario=usuario, cargo=cargo)
+        return Response(ProjetoMembroSerializer(membro).data, status=status.HTTP_201_CREATED)
 
-        # O cargo de proprietário não pode ser concedido por esta rota.
-        if cargo != ProjetoMembro.CARGO_ADMIN:
-            raise ValidationError({'cargo': 'Esta rota só permite adicionar administradores.'})
+    @action(detail=True, methods=['delete'], url_path=r'membros/(?P<usuario_id>[^/.]+)')
+    def remover_membro(self, request, pk=None, usuario_id=None):
+        projeto = self.get_object()
+        ator = self._get_membro(projeto, request.user)
+        membro = projeto.membros.filter(usuario_id=usuario_id).first()
+        if membro is None:
+            raise Http404
+        if membro.cargo == ProjetoMembro.CARGO_OWNER:
+            raise PermissionDenied('O proprietário não pode ser removido; transfira a propriedade primeiro.')
+        if membro.usuario_id != request.user.id:
+            if ator.cargo == ProjetoMembro.CARGO_MEMBER:
+                raise PermissionDenied('Membros não podem remover outros participantes.')
+            if ator.cargo == ProjetoMembro.CARGO_ADMIN and membro.cargo != ProjetoMembro.CARGO_MEMBER:
+                raise PermissionDenied('Administradores só podem remover membros comuns.')
+        membro.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if projeto.membros.filter(usuario=usuario, cargo=ProjetoMembro.CARGO_OWNER).exists():
-            raise ValidationError({'usuario': 'Não é permitido rebaixar o proprietário do projeto.'})
+    @action(detail=True, methods=['patch'], url_path=r'membros/(?P<usuario_id>[^/.]+)/cargo')
+    def alterar_cargo(self, request, pk=None, usuario_id=None):
+        projeto = self.get_object()
+        ator = self._get_membro(projeto, request.user)
+        if ator.cargo != ProjetoMembro.CARGO_OWNER:
+            raise PermissionDenied('Somente o proprietário pode mudar cargos.')
+        membro = projeto.membros.filter(usuario_id=usuario_id).first()
+        if membro is None:
+            raise Http404
+        if membro.cargo == ProjetoMembro.CARGO_OWNER:
+            raise PermissionDenied('Use a transferência de propriedade para alterar o proprietário.')
+        cargo = request.data.get('cargo')
+        if cargo not in {ProjetoMembro.CARGO_ADMIN, ProjetoMembro.CARGO_MEMBER}:
+            raise ValidationError({'cargo': 'Cargo deve ser admin ou member.'})
+        membro.cargo = cargo
+        membro.save(update_fields=['cargo'])
+        return Response(ProjetoMembroSerializer(membro).data)
 
-        membro, created = ProjetoMembro.objects.get_or_create(
-            projeto=projeto,
-            usuario=usuario,
-            defaults={'cargo': cargo},
-        )
-        if not created:
-            membro.cargo = cargo
-            membro.save()
-
-        return Response(
-            ProjetoMembroSerializer(membro).data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
-        )
+    @transaction.atomic
+    @action(detail=True, methods=['post'], url_path='transferir-propriedade')
+    def transferir_propriedade(self, request, pk=None):
+        projeto = self.get_object()
+        membros = projeto.membros.select_for_update()
+        atual = membros.filter(usuario=request.user, cargo=ProjetoMembro.CARGO_OWNER).first()
+        if atual is None:
+            raise PermissionDenied('Somente o proprietário pode transferir a propriedade.')
+        novo = membros.filter(usuario_id=request.data.get('usuario')).first()
+        if novo is None:
+            raise ValidationError({'usuario': 'O novo proprietário deve participar do projeto.'})
+        if novo.pk == atual.pk:
+            raise ValidationError({'usuario': 'Este usuário já é o proprietário.'})
+        novo.cargo = ProjetoMembro.CARGO_OWNER
+        novo.save(update_fields=['cargo'])
+        atual.cargo = ProjetoMembro.CARGO_ADMIN
+        atual.save(update_fields=['cargo'])
+        projeto.criador = novo.usuario
+        projeto.save(update_fields=['criador'])
+        return Response({'proprietario': novo.usuario_id})
