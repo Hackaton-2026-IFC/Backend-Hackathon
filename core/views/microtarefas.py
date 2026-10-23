@@ -1,4 +1,6 @@
 from django.http import Http404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
@@ -10,6 +12,11 @@ from core.serializers import MicroTarefaSerializer
 class MicroTarefaViewSet(ModelViewSet):
     serializer_class = MicroTarefaSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['tarefa', 'tarefa__projeto', 'concluida', 'ordem']
+    search_fields = ['titulo', 'descricao', 'tarefa__titulo']
+    ordering_fields = ['ordem', 'titulo', 'data_criacao']
+    ordering = ['tarefa_id', 'ordem', 'id']
 
     def get_queryset(self):
         return MicroTarefa.objects.filter(tarefa__projeto__membros__usuario=self.request.user).distinct()

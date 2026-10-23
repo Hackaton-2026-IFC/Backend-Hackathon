@@ -1,4 +1,6 @@
 from drf_spectacular.utils import extend_schema
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
@@ -16,6 +18,11 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['username']
+    search_fields = ['name', 'username']
+    ordering_fields = ['name', 'username', 'id']
+    ordering = ['id']
     # Cadastro é feito somente por /api/registro/. Exclusão fica desabilitada.
     http_method_names = ['get', 'put', 'patch', 'head', 'options']
 

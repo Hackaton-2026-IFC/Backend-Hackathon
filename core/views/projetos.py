@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.db import transaction
 from django.db.models import Exists, OuterRef
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -18,6 +20,11 @@ User = get_user_model()
 class ProjetoViewSet(ModelViewSet):
     serializer_class = ProjetoSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'criador', 'data_limite', 'prazo_antecipado', 'icone']
+    search_fields = ['nome', 'descricao', 'criador__name', 'criador__username']
+    ordering_fields = ['nome', 'data_criacao', 'data_limite', 'prazo_antecipado', 'status']
+    ordering = ['-fixado_usuario', '-data_criacao', '-id']
 
     def _get_membro(self, projeto, usuario):
         return projeto.membros.filter(usuario=usuario).first()
@@ -195,7 +202,7 @@ class ProjetoViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='meus-projetos')
     def meus_projetos(self, request):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
