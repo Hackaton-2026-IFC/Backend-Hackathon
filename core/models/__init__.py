@@ -12,3 +12,5 @@ from .google_identity import GoogleIdentity
 from .calendar_event import CalendarEvent
 
 from .atividade import Atividade
+
+from .comentario_tarefa import ComentarioTarefa
