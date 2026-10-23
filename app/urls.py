@@ -23,6 +23,7 @@ from core.views import (
     UserViewSet,
 )
 from uploader.router import router as uploader_router
+from core.views.meu_dia import MeuDiaView
 
 router = DefaultRouter()
 
@@ -52,6 +53,7 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', CustomTokenVerifyView.as_view(), name='token_verify'),
+    path('api/meu-dia/', MeuDiaView.as_view(), name='meu-dia'),
     # Registro de usuários
     path('api/registro/', UserRegistrationView.as_view(), name='user_registration'),
     # API
