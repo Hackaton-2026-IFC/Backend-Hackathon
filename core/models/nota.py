@@ -28,8 +28,8 @@ class Nota(models.Model):
     class Meta:
         ordering = ['-fixada', '-atualizada_em', '-id']
         indexes = [
-            models.Index(fields=['usuario', 'arquivada', 'fixada']),
-            models.Index(fields=['usuario', 'projeto']),
+            models.Index(fields=['usuario', 'arquivada', 'fixada'], name='core_nota_usuario_012f10_idx'),
+            models.Index(fields=['usuario', 'projeto'], name='core_nota_usuario_38f65d_idx'),
         ]
 
     def __str__(self):
