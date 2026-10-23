@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from .projetos import Projeto
 
@@ -34,6 +35,7 @@ class Tarefa(models.Model):
     descricao = models.TextField(blank=True, default='')
     prioridade = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, default=PRIORIDADE_NEUTRA)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PLANEJADO)
+    dependencias = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='tarefas_dependentes')
     responsavel = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -52,19 +54,28 @@ class Tarefa(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_limite = models.DateField(null=True, blank=True)
 
+    def dependencias_pendentes(self):
+        if not self.pk:
+            return Tarefa.objects.none()
+        return self.dependencias.exclude(status=self.STATUS_CONCLUIDO)
+
     def recalcular_status(self):
         microtarefas = list(self.microtarefas.all())
         if microtarefas:
-            if all(microtarefa.concluida for microtarefa in microtarefas):
-                self.status = self.STATUS_CONCLUIDO
-            elif any(microtarefa.concluida for microtarefa in microtarefas):
-                self.status = self.STATUS_EM_ANDAMENTO
+            if all(item.concluida for item in microtarefas) and not self.dependencias_pendentes().exists():
+                novo_status = self.STATUS_CONCLUIDO
+            elif any(item.concluida for item in microtarefas):
+                novo_status = self.STATUS_EM_ANDAMENTO
             else:
-                self.status = self.STATUS_PLANEJADO
-        elif self.concluida:
-            self.status = self.STATUS_CONCLUIDO
+                novo_status = self.STATUS_PLANEJADO
+        else:
+            novo_status = self.status
 
-        self.concluida = self.status == self.STATUS_CONCLUIDO
+        if novo_status == self.STATUS_CONCLUIDO and self.dependencias_pendentes().exists():
+            novo_status = self.STATUS_PLANEJADO
+
+        self.status = novo_status
+        self.concluida = novo_status == self.STATUS_CONCLUIDO
         self.save(update_fields=['status', 'concluida'])
 
     def __str__(self):
