@@ -2,6 +2,7 @@ from django.http import Http404
 from django.db import transaction
 from core.services.atividade import registrar, snapshot
 from core.services.weather import forecast_for_task
+from core.services.notificacoes import notificar_membros_projeto
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions, status
@@ -44,6 +45,15 @@ class TarefaViewSet(ModelViewSet):
             raise PermissionDenied('Você precisa fazer parte do projeto para criar tarefas.')
         task = serializer.save(criado_por=self.request.user)
         registrar(task, self.request.user, 'tarefa_criada')
+        notificar_membros_projeto(
+            projeto=task.projeto,
+            ator=self.request.user,
+            tarefa=task,
+            tipo='tarefa_criada',
+            titulo='Nova tarefa',
+            mensagem=f'{self.request.user.name or self.request.user.email} criou a tarefa "{task.titulo}".',
+            link=f'/projetos/{task.projeto_id}/tarefas/{task.pk}',
+        )
 
     def update(self, request, *args, **kwargs):
         self.get_object()
@@ -51,7 +61,17 @@ class TarefaViewSet(ModelViewSet):
             before = snapshot(self.get_object())
             response = super().update(request, *args, **kwargs)
             task = self.get_object()
-            registrar(task, request.user, 'tarefa_alterada', before, snapshot(task))
+            activity = registrar(task, request.user, 'tarefa_alterada', before, snapshot(task))
+            if activity is not None:
+                notificar_membros_projeto(
+                    projeto=task.projeto,
+                    ator=request.user,
+                    tarefa=task,
+                    tipo='tarefa_alterada',
+                    titulo='Tarefa atualizada',
+                    mensagem=f'{request.user.name or request.user.email} atualizou a tarefa "{task.titulo}".',
+                    link=f'/projetos/{task.projeto_id}/tarefas/{task.pk}',
+                )
             return response
 
     def partial_update(self, request, *args, **kwargs):
@@ -63,6 +83,15 @@ class TarefaViewSet(ModelViewSet):
         task = self.get_object()
         with transaction.atomic():
             registrar(task, request.user, 'tarefa_excluida')
+            notificar_membros_projeto(
+                projeto=task.projeto,
+                ator=request.user,
+                tarefa=task,
+                tipo='tarefa_excluida',
+                titulo='Tarefa excluída',
+                mensagem=f'{request.user.name or request.user.email} excluiu a tarefa "{task.titulo}".',
+                link=f'/projetos/{task.projeto_id}',
+            )
             return super().destroy(request, *args, **kwargs)
 
 

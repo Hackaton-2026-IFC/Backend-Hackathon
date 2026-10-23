@@ -8,3 +8,4 @@ from .user import UserRegistrationView, UserViewSet
 
 from .recursos import RecursoViewSet
 from .notas import NotaViewSet
+from .notificacoes import NotificacaoViewSet

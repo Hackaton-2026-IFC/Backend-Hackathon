@@ -8,6 +8,7 @@ from django.db import transaction
 from core.models import Tarefa
 from core.models.comentario_tarefa import ComentarioTarefa
 from core.models.atividade import Atividade
+from core.services.notificacoes import notificar_membros_projeto
 
 class ComentarioSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source='autor.name', read_only=True, allow_null=True)
@@ -51,6 +52,15 @@ def comentarios(request, pk):
     with transaction.atomic():
         comment = serializer.save(tarefa=task, autor=request.user)
         activity(task, request.user, 'comentario_criado', comment)
+        notificar_membros_projeto(
+            projeto=task.projeto,
+            ator=request.user,
+            tarefa=task,
+            tipo='comentario_criado',
+            titulo='Novo comentário',
+            mensagem=f'{request.user.name or request.user.email} comentou na tarefa "{task.titulo}".',
+            link=f'/projetos/{task.projeto_id}/tarefas/{task.pk}',
+        )
     return Response(ComentarioSerializer(comment).data, status=status.HTTP_201_CREATED)
 
 @api_view(['PATCH','DELETE'])
