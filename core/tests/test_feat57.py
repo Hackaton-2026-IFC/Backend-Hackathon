@@ -29,7 +29,7 @@ class NotificationTests(TestCase):
         self.client.force_authenticate(user=self.member)
         notifications = self.client.get('/api/notificacoes/')
         self.assertEqual(notifications.status_code, 200)
-        self.assertEqual(notifications.data['count'], 1)
+        self.assertEqual(len(notifications.data['results']), 1)
         notification_id = notifications.data['results'][0]['id']
         self.assertFalse(notifications.data['results'][0]['lida'])
         self.assertEqual(self.client.get('/api/notificacoes/nao-lidas/').data['quantidade'], 1)
@@ -37,7 +37,7 @@ class NotificationTests(TestCase):
         self.assertEqual(self.client.get('/api/notificacoes/nao-lidas/').data['quantidade'], 0)
 
         self.client.force_authenticate(user=self.outsider)
-        self.assertEqual(self.client.get('/api/notificacoes/').data['count'], 0)
+        self.assertEqual(len(self.client.get('/api/notificacoes/').data['results']), 0)
 
     @override_settings(
         NOTIFICATION_EMAIL_ENABLED=True,
