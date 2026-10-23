@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install system dependencies and PDM
         run: |
           sudo apt-get update
@@ -25,6 +25,9 @@ jobs:
         env:
           DEBUG: "True"
           SECRET_KEY: test-only-django-secret-do-not-use-in-production
+          CLOUDINARY_CLOUD_NAME: test-cloud
+          CLOUDINARY_API_KEY: test-api-key
+          CLOUDINARY_API_SECRET: test-api-secret
         run: |
           pdm run python manage.py check
           pdm run python manage.py test core uploader --verbosity 2
