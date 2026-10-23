@@ -24,4 +24,4 @@ Se a integração externa estiver indisponível, o endpoint retorna um relatóri
 Variáveis:
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (padrão: `gpt-6-luna`)
+- `OPENAI_MODEL` (padrão: `gpt-4.1-mini`)
