@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from core.models import Projeto, Tarefa
+from core.services.prazos import dados_prazo
 from core.serializers.microtarefas import MicroTarefaSerializer
 
 
@@ -10,6 +11,10 @@ class TarefaSerializer(serializers.ModelSerializer):
     microtarefas = MicroTarefaSerializer(many=True, read_only=True)
     status = serializers.ChoiceField(choices=Tarefa.STATUS_CHOICES, required=False)
     urgencia = serializers.SerializerMethodField()
+    atrasada = serializers.SerializerMethodField()
+    vence_hoje = serializers.SerializerMethodField()
+    dias_para_prazo = serializers.SerializerMethodField()
+    prazo_efetivo = serializers.SerializerMethodField()
     dependencias = serializers.PrimaryKeyRelatedField(queryset=Tarefa.objects.all(), many=True, required=False)
 
     class Meta:
@@ -18,9 +23,21 @@ class TarefaSerializer(serializers.ModelSerializer):
             'id', 'projeto', 'titulo', 'descricao', 'prioridade', 'status',
             'dependencias', 'responsavel', 'criado_por', 'concluida',
             'data_criacao', 'data_limite', 'prazo_antecipado',
-            'urgencia', 'urgencia_manual', 'microtarefas', 'clima_influencia', 'localizacao',
+            'urgencia', 'urgencia_manual', 'atrasada', 'vence_hoje', 'dias_para_prazo', 'prazo_efetivo', 'microtarefas', 'clima_influencia', 'localizacao',
         ]
         read_only_fields = ['id', 'data_criacao', 'criado_por', 'microtarefas']
+
+    def get_atrasada(self, obj):
+        return dados_prazo(obj)['atrasada']
+
+    def get_vence_hoje(self, obj):
+        return dados_prazo(obj)['vence_hoje']
+
+    def get_dias_para_prazo(self, obj):
+        return dados_prazo(obj)['dias_para_prazo']
+
+    def get_prazo_efetivo(self, obj):
+        return dados_prazo(obj)['prazo_efetivo']
 
     def get_urgencia(self, obj):
         return obj.urgencia
