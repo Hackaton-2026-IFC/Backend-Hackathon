@@ -53,6 +53,7 @@ class Tarefa(models.Model):
     concluida = models.BooleanField(default=False)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_limite = models.DateField(null=True, blank=True)
+    prazo_antecipado = models.DateField(null=True, blank=True)
 
     def dependencias_pendentes(self):
         if not self.pk:
