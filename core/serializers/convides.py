@@ -19,8 +19,8 @@ class ConviteProjetoSerializer(serializers.ModelSerializer):
 
     def validate_cargo(self, value):
         # Convites não podem conceder direitos de proprietário.
-        if value != ProjetoMembro.CARGO_ADMIN:
-            raise serializers.ValidationError('Só é permitido convidar administradores.')
+        if value not in (ProjetoMembro.CARGO_ADMIN, ProjetoMembro.CARGO_MEMBER):
+            raise serializers.ValidationError('Só é permitido convidar administradores ou membros.')
         return value
 
 
