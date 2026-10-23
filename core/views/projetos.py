@@ -121,7 +121,7 @@ class ProjetoViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], url_path='membros')
     def listar_membros(self, request, pk=None):
         projeto = self.get_object()
-        membros = projeto.membros.select_related('usuario').order_by('id')
+        membros = projeto.membros.select_related('usuario__profile_image').order_by('id')
         return Response(ProjetoMembroSerializer(membros, many=True).data)
 
     @action(detail=True, methods=['post'], url_path='adicionar-membro')
