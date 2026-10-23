@@ -20,6 +20,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
     criador = serializers.PrimaryKeyRelatedField(read_only=True)
     icone = serializers.ChoiceField(choices=Projeto.ICON_CHOICES, required=False, allow_blank=True)
     participantes = serializers.SerializerMethodField()
+    fixado = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
@@ -34,8 +35,15 @@ class ProjetoSerializer(serializers.ModelSerializer):
             'data_criacao',
             'criador',
             'participantes',
+            'fixado',
         ]
         read_only_fields = ['id', 'data_criacao', 'criador', 'participantes']
+
+    def get_fixado(self, obj):
+        if hasattr(obj, 'fixado_usuario'):
+            return obj.fixado_usuario
+        request = self.context.get('request')
+        return bool(request and request.user.is_authenticated and obj.fixacoes.filter(usuario=request.user).exists())
 
     def get_participantes(self, obj):
         return ProjetoMembroSerializer(obj.membros.all(), many=True).data
