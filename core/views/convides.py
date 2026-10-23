@@ -22,7 +22,12 @@ class ConviteProjetoViewSet(ModelViewSet):
             Q(usuario=self.request.user) | Q(projeto__membros__usuario=self.request.user)
         ).distinct().order_by('-criado_em')
         if self.action == 'responder':
-            return queryset.select_for_update()
+            # PostgreSQL proíbe SELECT ... FOR UPDATE combinado com DISTINCT.
+            # Mantemos a verificação de visibilidade numa subquery e bloqueamos
+            # somente a tabela de convites, sem JOIN/DISTINCT no SELECT externo.
+            return ConviteProjeto.objects.filter(
+                pk__in=queryset.values('pk')
+            ).select_for_update().order_by('-criado_em')
         return queryset
 
     def get_object(self):
