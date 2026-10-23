@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core import mail
+from unittest.mock import patch
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
@@ -73,3 +74,18 @@ class NotificationTests(TestCase):
         self.client.force_authenticate(user=self.owner)
         titles = [item['titulo'] for item in self.client.get('/api/notificacoes/').data['results']]
         self.assertIn('Novo comentário', titles)
+
+    @override_settings(NOTIFICATION_EMAIL_ENABLED=True)
+    @patch('core.services.notificacoes.send_mail', side_effect=OSError('SMTP unavailable'))
+    def test_smtp_failure_does_not_interrupt_notification(self, mocked_mail):
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                '/api/tarefas/',
+                {'projeto': self.project, 'titulo': 'Evento sem SMTP'},
+                format='json',
+            )
+        self.assertEqual(response.status_code, 201)
+        self.client.force_authenticate(user=self.member)
+        notifications = self.client.get('/api/notificacoes/')
+        self.assertEqual(len(notifications.data['results']), 1)
+        self.assertFalse(notifications.data['results'][0]['email_enviado'])

@@ -41,7 +41,7 @@ class ProjectAgentTests(TestCase):
         self.assertIn('Automatizar relatório', response.data['analise'])
 
     @patch('core.services.ai_agent.requests.post')
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key', 'OPENAI_MODEL': 'gpt-6-luna'})
+    @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key', 'OPENAI_MODEL': 'gpt-4.1-mini'})
     def test_openai_quando_configurada(self, post):
         post.return_value = Mock(
             json=lambda: {'output_text': 'Relatório inteligente'},

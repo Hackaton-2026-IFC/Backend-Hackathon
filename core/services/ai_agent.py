@@ -22,6 +22,7 @@ def _task_data(task):
 
 
 def build_project_context(project, user):
+    task_count = project.tarefas.count()
     tasks = list(
         project.tarefas.select_related('responsavel')
         .all()
@@ -45,6 +46,8 @@ def build_project_context(project, user):
             'prazo_antecipado': project.prazo_antecipado.isoformat() if project.prazo_antecipado else None,
         },
         'membros': [{'nome': nome or 'Sem nome', 'cargo': cargo} for nome, cargo in members],
+        'total_tarefas_projeto': task_count,
+        'tarefas_analisadas': len(tasks),
         'tarefas': [_task_data(task) for task in tasks],
         'notas_pessoais_do_usuario': [
             {
@@ -69,12 +72,15 @@ def local_report(context, ideas, objective):
             overdue.append(item)
 
     progress = round(completed * 100 / total, 1) if total else 0
+    full_count = context.get('total_tarefas_projeto', total)
     lines = [
         f"# Relatório — {context['projeto']['nome']}",
         '',
-        f"**Progresso:** {progress}% ({completed}/{total} tarefas concluídas).",
+        f"**Progresso da amostra:** {progress}% ({completed}/{total} tarefas concluídas)." if full_count > total else f"**Progresso:** {progress}% ({completed}/{total} tarefas concluídas).",
         f"**Em andamento:** {in_progress}. **Atrasadas:** {len(overdue)}.",
     ]
+    if full_count > total:
+        lines += ['', f'**Atenção:** foram analisadas {total} de {full_count} tarefas; métricas parciais.']
     if objective:
         lines += ['', f"**Objetivo informado:** {objective}"]
 
@@ -128,7 +134,7 @@ def generate_project_analysis(project, user, ideas, objective):
             'aviso': 'OPENAI_API_KEY não configurada; relatório local utilizado.',
         }
 
-    model = os.getenv('OPENAI_MODEL', 'gpt-6-luna').strip() or 'gpt-6-luna'
+    model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini').strip() or 'gpt-6-luna'
     instructions = (
         'Você é um agente de gestão de projetos. Produza um relatório objetivo em português do Brasil. '
         'Organize ideias em aplicações práticas, tarefas, ordem recomendada, dependências, riscos e próximos passos. '
