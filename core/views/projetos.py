@@ -8,8 +8,8 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from core.models import Projeto, ProjetoMembro, ProjetoFixado
-from core.serializers import ProjetoMembroSerializer, ProjetoSerializer
+from core.models import Projeto, ProjetoMembro, ProjetoFixado, Tarefa
+from core.serializers import ProjetoMembroSerializer, ProjetoSerializer, TarefaSerializer
 
 User = get_user_model()
 
@@ -63,6 +63,32 @@ class ProjetoViewSet(ModelViewSet):
         if membro is None or membro.cargo != ProjetoMembro.CARGO_OWNER:
             raise PermissionDenied('Apenas o owner pode excluir o projeto.')
         return super().destroy(request, *args, **kwargs)
+
+
+    @action(detail=True, methods=['get'], url_path='kanban')
+    def kanban(self, request, pk=None):
+        """Kanban e progresso das tarefas de um projeto acessível ao usuário."""
+        projeto = self.get_object()
+        tarefas = list(
+            Tarefa.objects.filter(projeto=projeto)
+            .prefetch_related('dependencias', 'microtarefas')
+            .order_by('-data_criacao', '-id')
+        )
+        colunas = {status: [] for status, _ in Tarefa.STATUS_CHOICES}
+        for tarefa in tarefas:
+            colunas[tarefa.status].append(
+                TarefaSerializer(tarefa, context={'request': request}).data
+            )
+
+        total = len(tarefas)
+        concluidas = len(colunas[Tarefa.STATUS_CONCLUIDO])
+        return Response({
+            'projeto': projeto.pk,
+            'progresso': round(concluidas * 100 / total, 2) if total else 0,
+            'total_tarefas': total,
+            'tarefas_concluidas': concluidas,
+            'kanban': colunas,
+        })
 
     @action(detail=True, methods=['post', 'delete'], url_path='fixar')
     def fixar(self, request, pk=None):
