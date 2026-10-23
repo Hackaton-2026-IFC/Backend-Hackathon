@@ -53,6 +53,7 @@ class Tarefa(models.Model):
     )
     concluida = models.BooleanField(default=False)
     data_criacao = models.DateTimeField(auto_now_add=True)
+    data_conclusao = models.DateTimeField(null=True, blank=True, editable=False)
     data_limite = models.DateField(null=True, blank=True)
     prazo_antecipado = models.DateField(null=True, blank=True)
     clima_influencia = models.BooleanField(default=False)
@@ -102,6 +103,27 @@ class Tarefa(models.Model):
         self.status = novo_status
         self.concluida = novo_status == self.STATUS_CONCLUIDO
         self.save(update_fields=['status', 'concluida'])
+
+    def save(self, *args, **kwargs):
+        # Registra apenas a transição real para concluído, sem inventar datas
+        # para tarefas antigas que já estavam concluídas antes da migração.
+        status_anterior = None
+        if self.pk:
+            status_anterior = type(self).objects.filter(pk=self.pk).values_list('status', flat=True).first()
+
+        data_alterada = False
+        if self.status == self.STATUS_CONCLUIDO:
+            if status_anterior != self.STATUS_CONCLUIDO:
+                self.data_conclusao = timezone.now()
+                data_alterada = True
+        elif self.data_conclusao is not None:
+            self.data_conclusao = None
+            data_alterada = True
+
+        if data_alterada and kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'data_conclusao'}
+
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.titulo

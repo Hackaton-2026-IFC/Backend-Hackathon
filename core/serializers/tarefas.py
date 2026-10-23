@@ -22,10 +22,10 @@ class TarefaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'projeto', 'titulo', 'descricao', 'prioridade', 'status',
             'dependencias', 'responsavel', 'criado_por', 'concluida',
-            'data_criacao', 'data_limite', 'prazo_antecipado',
+            'data_criacao', 'data_conclusao', 'data_limite', 'prazo_antecipado',
             'urgencia', 'urgencia_manual', 'atrasada', 'vence_hoje', 'dias_para_prazo', 'prazo_efetivo', 'microtarefas', 'clima_influencia', 'localizacao',
         ]
-        read_only_fields = ['id', 'data_criacao', 'criado_por', 'microtarefas']
+        read_only_fields = ['id', 'data_criacao', 'data_conclusao', 'criado_por', 'microtarefas']
 
     def get_atrasada(self, obj):
         return dados_prazo(obj)['atrasada']
