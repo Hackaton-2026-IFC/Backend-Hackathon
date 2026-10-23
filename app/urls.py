@@ -11,6 +11,7 @@ from rest_framework.routers import DefaultRouter
 
 from core.views import (
     CategoriaViewSet,
+    ConviteProjetoViewSet,
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
     CustomTokenVerifyView,
@@ -27,6 +28,7 @@ router.register(r'categorias', CategoriaViewSet, basename='categorias')
 router.register(r'usuarios', UserViewSet, basename='usuarios')
 router.register(r'projetos', ProjetoViewSet, basename='projetos')
 router.register(r'tarefas', TarefaViewSet, basename='tarefas')
+router.register(r'convites', ConviteProjetoViewSet, basename='convites')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -18,11 +18,22 @@ class ProjetoMembroSerializer(serializers.ModelSerializer):
 class ProjetoSerializer(serializers.ModelSerializer):
     criador = serializers.PrimaryKeyRelatedField(read_only=True)
     criador_hidden = serializers.HiddenField(default=serializers.CurrentUserDefault(), source='criador')
+    icone = serializers.ChoiceField(choices=Projeto.ICON_CHOICES, required=False, allow_blank=True)
     participantes = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
-        fields = ['id', 'nome', 'descricao', 'cor', 'data_criacao', 'criador', 'criador_hidden', 'participantes']
+        fields = [
+            'id',
+            'nome',
+            'descricao',
+            'cor',
+            'icone',
+            'data_criacao',
+            'criador',
+            'criador_hidden',
+            'participantes',
+        ]
         read_only_fields = ['id', 'data_criacao', 'criador', 'participantes']
 
     def get_participantes(self, obj):

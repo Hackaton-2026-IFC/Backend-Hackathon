@@ -17,12 +17,13 @@ class ProjetoTarefaSecurityTests(TestCase):
     def test_owner_equipe_automaticamente_e_endpoint_de_projetos_do_usuario(self):
         response = self.client.post(
             '/api/projetos/',
-            {'nome': 'Projeto Alpha', 'descricao': 'Desc', 'cor': '#123456'},
+            {'nome': 'Projeto Alpha', 'descricao': 'Desc', 'cor': '#123456', 'icone': 'rocket-launch'},
             format='json',
         )
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['criador'], self.owner.id)
+        self.assertEqual(response.data['icone'], 'rocket-launch')
 
         participantes = response.data['participantes']
         self.assertTrue(any(item['usuario'] == self.owner.id and item['cargo'] == 'owner' for item in participantes))
@@ -94,3 +95,36 @@ class ProjetoTarefaSecurityTests(TestCase):
             format='json',
         )
         self.assertEqual(update_response.status_code, 403)
+
+    def test_fluxo_de_convite_aceito(self):
+        response = self.client.post(
+            '/api/projetos/',
+            {'nome': 'Projeto Convite', 'descricao': 'Desc', 'cor': '#abcdef'},
+            format='json',
+        )
+        projeto_id = response.data['id']
+
+        convite_response = self.client.post(
+            '/api/convites/',
+            {'projeto': projeto_id, 'usuario': self.member.id, 'cargo': 'admin'},
+            format='json',
+        )
+        self.assertEqual(convite_response.status_code, 201)
+        convite_id = convite_response.data['id']
+
+        self.client.force_authenticate(user=self.member)
+        resposta = self.client.post(
+            f'/api/convites/{convite_id}/responder/',
+            {'acao': 'aceitar'},
+            format='json',
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.data['status'], 'aceito')
+        self.assertTrue(
+            self.client.get('/api/projetos/meus-projetos/').data[0]['participantes']
+            and any(
+                item['usuario'] == self.member.id
+                for item in self.client.get('/api/projetos/meus-projetos/').data[0]['participantes']
+            )
+        )
