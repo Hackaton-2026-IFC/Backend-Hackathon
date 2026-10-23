@@ -1,5 +1,6 @@
 from django.conf import settings
 import logging
+import smtplib
 
 from django.core.mail import send_mail
 from django.db import transaction
@@ -42,7 +43,7 @@ def _enviar_email(notification_id):
         recipient_list=[notification.destinatario.email],
         fail_silently=False,
         )
-    except (OSError, ConnectionError, TimeoutError) as exc:
+    except (OSError, smtplib.SMTPException) as exc:
         logger.warning('Falha no envio de notificação por e-mail (id=%s): %s', notification_id, type(exc).__name__)
         return
     if sent:
