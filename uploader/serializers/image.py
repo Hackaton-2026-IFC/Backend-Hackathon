@@ -4,6 +4,20 @@ from uploader.helpers.files import MAX_IMAGE_UPLOAD_SIZE, MAX_VIDEO_UPLOAD_SIZE,
 from uploader.models import Image
 
 
+ALLOWED_IMAGE_TYPES = {
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/avif',
+}
+ALLOWED_VIDEO_TYPES = {
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+}
+
+
 class ImageUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
@@ -13,14 +27,14 @@ class ImageUploadSerializer(serializers.ModelSerializer):
 
     def validate_file(self, value):
         content_type = get_content_type(value)
-        if content_type.startswith("image/"):
+        if content_type in ALLOWED_IMAGE_TYPES:
             max_size = MAX_IMAGE_UPLOAD_SIZE
             media_type = "image"
-        elif content_type.startswith("video/"):
+        elif content_type in ALLOWED_VIDEO_TYPES:
             max_size = MAX_VIDEO_UPLOAD_SIZE
             media_type = "video"
         else:
-            raise serializers.ValidationError("Only valid image and video files are allowed.")
+            raise serializers.ValidationError("Only approved image and video formats are allowed.")
 
         if value.size > max_size:
             max_size_mb = max_size // (1024 * 1024)

@@ -28,6 +28,8 @@ DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 if not DEBUG and SECRET_KEY in ('', 'django-insecure'):
     raise ImproperlyConfigured('Configure uma SECRET_KEY segura em produção.')
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '*').split(',') if host.strip()]
+if not DEBUG and (not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS):
+    raise ImproperlyConfigured('Configure ALLOWED_HOSTS explicitamente em produção.')
 
 # ============================================================
 # Frontend autorizado
@@ -44,6 +46,19 @@ CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
 CORS_ALLOWED_ORIGINS = FRONTEND_URLS
 CSRF_TRUSTED_ORIGINS = FRONTEND_URLS
 CORS_ALLOW_CREDENTIALS = True
+
+# ============================================================
+# Endurecimento de produção
+# ============================================================
+
+if not DEBUG:
+    # O Fabroku/nginx encaminha o protocolo original neste cabeçalho.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # ============================================================
 # Aplicações instaladas
@@ -215,6 +230,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'app.pagination.CustomPagination',
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '30/min',
+        'registration': '10/min',
+        'google_auth': '30/min',
+        'project_agent': '20/min',
+    },
     'PAGE_SIZE': 10,
 }
 
@@ -249,4 +270,5 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '10'))
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@hackathon.local')

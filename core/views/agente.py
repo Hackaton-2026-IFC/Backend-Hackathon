@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from core.models import Projeto
@@ -23,6 +24,8 @@ class AgentRequestSerializer(serializers.Serializer):
 
 class ProjectAgentView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'project_agent'
 
     def post(self, request, pk):
         project = Projeto.objects.filter(pk=pk).first()

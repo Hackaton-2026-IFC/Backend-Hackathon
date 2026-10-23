@@ -5,6 +5,7 @@ from django.db import IntegrityError, transaction
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from core.models.google_identity import GoogleIdentity
@@ -37,6 +38,8 @@ def validated_google_identity(credential):
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'google_auth'
 
     def post(self, request):
         serializer = GoogleCredentialSerializer(data=request.data)

@@ -52,7 +52,7 @@ class TarefaViewSet(ModelViewSet):
             tipo='tarefa_criada',
             titulo='Nova tarefa',
             mensagem=f'{self.request.user.name or self.request.user.email} criou a tarefa "{task.titulo}".',
-            link=f'/projetos/{task.projeto_id}/tarefas/{task.pk}',
+            link=f'/projects/{task.projeto_id}/tasks',
         )
 
     def update(self, request, *args, **kwargs):
@@ -70,7 +70,7 @@ class TarefaViewSet(ModelViewSet):
                     tipo='tarefa_alterada',
                     titulo='Tarefa atualizada',
                     mensagem=f'{request.user.name or request.user.email} atualizou a tarefa "{task.titulo}".',
-                    link=f'/projetos/{task.projeto_id}/tarefas/{task.pk}',
+                    link=f'/projects/{task.projeto_id}/tasks',
                 )
             return response
 
@@ -90,7 +90,7 @@ class TarefaViewSet(ModelViewSet):
                 tipo='tarefa_excluida',
                 titulo='Tarefa excluída',
                 mensagem=f'{request.user.name or request.user.email} excluiu a tarefa "{task.titulo}".',
-                link=f'/projetos/{task.projeto_id}',
+                link=f'/projects/{task.projeto_id}',
             )
             return super().destroy(request, *args, **kwargs)
 

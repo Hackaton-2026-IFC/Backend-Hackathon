@@ -59,7 +59,7 @@ def comentarios(request, pk):
             tipo='comentario_criado',
             titulo='Novo comentário',
             mensagem=f'{request.user.name or request.user.email} comentou na tarefa "{task.titulo}".',
-            link=f'/projetos/{task.projeto_id}/tarefas/{task.pk}',
+            link=f'/projects/{task.projeto_id}/tasks',
         )
     return Response(ComentarioSerializer(comment).data, status=status.HTTP_201_CREATED)
 

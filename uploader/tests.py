@@ -2,15 +2,19 @@ from io import BytesIO
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files.storage import storages
 from django.test import TestCase
 import magic
 from PIL import Image as PillowImage
+from rest_framework.test import APIClient
 
 from uploader.helpers.files import get_content_type
 from uploader.serializers.image import ImageUploadSerializer
 from uploader.storage import MediaCloudinaryStorage
+
+User = get_user_model()
 
 
 class ContentTypeFallbackTests(TestCase):
@@ -44,11 +48,16 @@ class ImageUploadSerializerTests(TestCase):
             is_valid = serializer.is_valid()
         return is_valid, serializer.errors
 
-    def test_accepts_image_and_video_mime_types(self):
-        for content_type in ("image/gif", "image/svg+xml", "video/mp4"):
+    def test_accepts_approved_image_and_video_mime_types(self):
+        for content_type in ("image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4", "video/webm"):
             with self.subTest(content_type=content_type):
                 is_valid, errors = self.validate_file(content_type)
                 self.assertTrue(is_valid, errors)
+
+    def test_rejects_svg_to_avoid_active_content_uploads(self):
+        is_valid, errors = self.validate_file("image/svg+xml")
+        self.assertFalse(is_valid)
+        self.assertIn("file", errors)
 
     def test_rejects_non_media_files(self):
         is_valid, errors = self.validate_file("application/pdf")
@@ -69,6 +78,17 @@ class ImageUploadSerializerTests(TestCase):
 
         self.assertFalse(is_valid)
         self.assertIn("3 MB", str(errors["file"][0]))
+
+
+class UploadAccessTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='upload@test.com', password='12345678')
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_upload_collections_cannot_be_listed(self):
+        self.assertEqual(self.client.get('/api/media/images/').status_code, 405)
+        self.assertEqual(self.client.get('/api/media/documents/').status_code, 405)
 
 
 class MediaCloudinaryStorageTests(TestCase):
