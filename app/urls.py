@@ -14,17 +14,19 @@ from core.views import (
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
     CustomTokenVerifyView,
+    ProjetoViewSet,
+    TarefaViewSet,
     UserRegistrationView,
     UserViewSet,
 )
-
 from uploader.router import router as uploader_router
-
 
 router = DefaultRouter()
 
 router.register(r'categorias', CategoriaViewSet, basename='categorias')
 router.register(r'usuarios', UserViewSet, basename='usuarios')
+router.register(r'projetos', ProjetoViewSet, basename='projetos')
+router.register(r'tarefas', TarefaViewSet, basename='tarefas')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

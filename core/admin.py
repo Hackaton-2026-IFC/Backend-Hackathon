@@ -55,4 +55,7 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(models.Categoria)
+admin.site.register(models.Projeto)
+admin.site.register(models.ProjetoMembro)
+admin.site.register(models.Tarefa)
 admin.site.register(models.User, UserAdmin)
