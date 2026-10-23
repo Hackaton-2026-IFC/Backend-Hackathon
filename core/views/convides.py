@@ -1,6 +1,8 @@
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -14,6 +16,11 @@ from core.serializers import ConviteProjetoSerializer, RespostaConviteSerializer
 class ConviteProjetoViewSet(ModelViewSet):
     serializer_class = ConviteProjetoSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['projeto', 'usuario', 'enviado_por', 'cargo', 'status']
+    search_fields = ['projeto__nome', 'usuario__name', 'usuario__username']
+    ordering_fields = ['criado_em', 'respondido_em', 'status']
+    ordering = ['-criado_em', '-id']
     # Respostas são feitas pela action; PUT/PATCH/DELETE não devem alterar convites.
     http_method_names = ['get', 'post', 'head', 'options']
 
