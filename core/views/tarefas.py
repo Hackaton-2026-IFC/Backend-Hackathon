@@ -1,4 +1,6 @@
 from django.http import Http404
+from django.db import transaction
+from core.services.atividade import registrar, snapshot
 from core.services.weather import forecast_for_task
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -40,19 +42,33 @@ class TarefaViewSet(ModelViewSet):
         projeto = serializer.validated_data.get('projeto')
         if projeto is None or not projeto.membros.filter(usuario=self.request.user).exists():
             raise PermissionDenied('Você precisa fazer parte do projeto para criar tarefas.')
-        serializer.save(criado_por=self.request.user)
+        task = serializer.save(criado_por=self.request.user)
+        registrar(task, self.request.user, 'tarefa_criada')
 
     def update(self, request, *args, **kwargs):
         self.get_object()
-        return super().update(request, *args, **kwargs)
+        with transaction.atomic():
+            before = snapshot(self.get_object())
+            response = super().update(request, *args, **kwargs)
+            task = self.get_object()
+            registrar(task, request.user, 'tarefa_alterada', before, snapshot(task))
+            return response
 
     def partial_update(self, request, *args, **kwargs):
         self.get_object()
-        return super().partial_update(request, *args, **kwargs)
+        with transaction.atomic():
+            before = snapshot(self.get_object())
+            response = super().partial_update(request, *args, **kwargs)
+            task = self.get_object()
+            registrar(task, request.user, 'tarefa_alterada', before, snapshot(task))
+            return response
 
     def destroy(self, request, *args, **kwargs):
         self.get_object()
-        return super().destroy(request, *args, **kwargs)
+        task = self.get_object()
+        with transaction.atomic():
+            registrar(task, request.user, 'tarefa_excluida')
+            return super().destroy(request, *args, **kwargs)
 
 
     @action(detail=True, methods=['get', 'post'], url_path='recursos')
