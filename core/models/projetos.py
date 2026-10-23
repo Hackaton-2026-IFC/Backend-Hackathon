@@ -34,6 +34,7 @@ class Projeto(models.Model):
     nome = models.CharField(max_length=100)
     data_criacao = models.DateField(auto_now_add=True)
     data_limite = models.DateField(null=True, blank=True)
+    prazo_antecipado = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PLANEJADO)
     descricao = models.TextField(blank=True, null=True)
     cor = models.CharField(max_length=7, default='#FFFFFF')
