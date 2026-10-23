@@ -16,3 +16,5 @@ from .atividade import Atividade
 from .comentario_tarefa import ComentarioTarefa
 
 from .nota import Nota
+
+from .notificacao import Notificacao
