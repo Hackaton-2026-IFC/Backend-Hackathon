@@ -69,3 +69,13 @@ class ProjetoMembro(models.Model):
 
     def __str__(self):
         return f'{self.usuario} ({self.cargo})'
+
+class ProjetoFixado(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='projetos_fixados')
+    projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='fixacoes')
+    fixado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'projeto'], name='projeto_fixado_por_usuario_unico')
+        ]
