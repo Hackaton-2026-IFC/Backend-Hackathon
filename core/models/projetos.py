@@ -41,10 +41,12 @@ class Projeto(models.Model):
 class ProjetoMembro(models.Model):
     CARGO_OWNER = 'owner'
     CARGO_ADMIN = 'admin'
+    CARGO_MEMBER = 'member'
 
     CARGO_CHOICES = (
         (CARGO_OWNER, 'Owner'),
         (CARGO_ADMIN, 'Admin'),
+        (CARGO_MEMBER, 'Membro'),
     )
 
     projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='membros')
