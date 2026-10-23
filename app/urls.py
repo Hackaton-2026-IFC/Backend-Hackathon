@@ -23,6 +23,7 @@ from core.views import (
     UserViewSet,
 )
 from uploader.router import router as uploader_router
+from core.views.google_auth import GoogleLoginView, GoogleLinkView
 from core.views.meu_dia import MeuDiaView
 
 router = DefaultRouter()
@@ -54,6 +55,8 @@ urlpatterns = [
     path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', CustomTokenVerifyView.as_view(), name='token_verify'),
     path('api/meu-dia/', MeuDiaView.as_view(), name='meu-dia'),
+    path('api/auth/google/', GoogleLoginView.as_view(), name='google-login'),
+    path('api/auth/google/vincular/', GoogleLinkView.as_view(), name='google-link'),
     # Registro de usuários
     path('api/registro/', UserRegistrationView.as_view(), name='user_registration'),
     # API
