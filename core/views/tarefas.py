@@ -1,4 +1,5 @@
 from django.http import Http404
+from core.services.weather import forecast_for_task
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions, status
@@ -65,6 +66,11 @@ class TarefaViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(projeto=tarefa.projeto, tarefa=tarefa, adicionado_por=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'], url_path='clima')
+    def clima(self, request, pk=None):
+        tarefa = self.get_object()
+        return Response(forecast_for_task(tarefa))
 
     @action(detail=False, methods=['get'], url_path='kanban')
     def kanban(self, request):
