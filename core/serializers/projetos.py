@@ -29,6 +29,8 @@ class ProjetoSerializer(serializers.ModelSerializer):
             'descricao',
             'cor',
             'icone',
+            'status',
+            'data_limite',
             'data_criacao',
             'criador',
             'participantes',

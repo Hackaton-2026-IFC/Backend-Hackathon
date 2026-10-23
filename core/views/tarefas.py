@@ -1,6 +1,8 @@
 from django.http import Http404
 from rest_framework import permissions
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import Tarefa
@@ -40,3 +42,21 @@ class TarefaViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         self.get_object()
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='kanban')
+    def kanban(self, request):
+        projeto_id = request.query_params.get('projeto')
+        queryset = self.get_queryset()
+        if projeto_id:
+            queryset = queryset.filter(projeto_id=projeto_id)
+
+        agrupado = {
+            'planejado': [],
+            'em_andamento': [],
+            'concluido': [],
+        }
+
+        for tarefa in queryset:
+            agrupado.setdefault(tarefa.status, []).append(self.get_serializer(tarefa).data)
+
+        return Response(agrupado)
