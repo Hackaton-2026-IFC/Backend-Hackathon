@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import Projeto, ProjetoMembro, ProjetoFixado, Tarefa
+from core.services.prazos import dados_prazo
 from core.serializers import ProjetoMembroSerializer, ProjetoSerializer, TarefaSerializer, RecursoSerializer
 
 User = get_user_model()
@@ -45,8 +46,7 @@ class ProjetoViewSet(ModelViewSet):
         atrasadas = [
             tarefa for tarefa in tarefas
             if tarefa.status != Tarefa.STATUS_CONCLUIDO
-            and tarefa.data_limite is not None
-            and tarefa.data_limite < hoje
+            and dados_prazo(tarefa, hoje)['atrasada']
         ]
         urgencias = {
             Tarefa.PRIORIDADE_MUITO_BAIXA: 0,
