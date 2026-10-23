@@ -85,6 +85,8 @@ class TarefaSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         dependencias = validated_data.pop('dependencias', [])
+        status = validated_data.get('status', Tarefa.STATUS_PLANEJADO)
+        validated_data['concluida'] = status == Tarefa.STATUS_CONCLUIDO
         tarefa = super().create(validated_data)
         tarefa.dependencias.set(dependencias)
         return tarefa
