@@ -28,6 +28,8 @@ DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 if not DEBUG and SECRET_KEY in ('', 'django-insecure'):
     raise ImproperlyConfigured('Configure uma SECRET_KEY segura em produção.')
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '*').split(',') if host.strip()]
+if not DEBUG and (not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS):
+    raise ImproperlyConfigured('Configure ALLOWED_HOSTS explicitamente em produção.')
 
 # ============================================================
 # Frontend autorizado
@@ -44,6 +46,19 @@ CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
 CORS_ALLOWED_ORIGINS = FRONTEND_URLS
 CSRF_TRUSTED_ORIGINS = FRONTEND_URLS
 CORS_ALLOW_CREDENTIALS = True
+
+# ============================================================
+# Endurecimento de produção
+# ============================================================
+
+if not DEBUG:
+    # O Fabroku/nginx encaminha o protocolo original neste cabeçalho.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # ============================================================
 # Aplicações instaladas
