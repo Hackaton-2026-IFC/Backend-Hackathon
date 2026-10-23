@@ -9,6 +9,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.models import User
 from core.serializers import UserRegistrationSerializer, UserSerializer
+from core.serializers.user import UserDirectorySerializer
 
 
 class UserViewSet(ModelViewSet):
@@ -17,6 +18,16 @@ class UserViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     # Cadastro é feito somente por /api/registro/. Exclusão fica desabilitada.
     http_method_names = ['get', 'put', 'patch', 'head', 'options']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return UserDirectorySerializer
+        return self.serializer_class
+
+    def retrieve(self, request, *args, **kwargs):
+        if self.get_object().pk != request.user.pk:
+            raise PermissionDenied('Você só pode consultar seu próprio perfil.')
+        return super().retrieve(request, *args, **kwargs)
 
     def perform_update(self, serializer):
         if serializer.instance.pk != self.request.user.pk:
