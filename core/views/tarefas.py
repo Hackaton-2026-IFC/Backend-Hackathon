@@ -1,4 +1,6 @@
 from django.http import Http404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -12,6 +14,14 @@ from core.serializers import TarefaSerializer, RecursoSerializer
 class TarefaViewSet(ModelViewSet):
     serializer_class = TarefaSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = [
+        'projeto', 'status', 'prioridade', 'responsavel', 'criado_por',
+        'concluida', 'urgencia_manual', 'data_limite', 'prazo_antecipado',
+    ]
+    search_fields = ['titulo', 'descricao', 'projeto__nome', 'responsavel__name']
+    ordering_fields = ['titulo', 'data_criacao', 'data_limite', 'prazo_antecipado', 'prioridade', 'status']
+    ordering = ['-data_criacao', '-id']
 
     def get_queryset(self):
         return Tarefa.objects.filter(projeto__membros__usuario=self.request.user).distinct().order_by('-data_criacao')

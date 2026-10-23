@@ -1,3 +1,5 @@
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
@@ -10,6 +12,11 @@ class RecursoViewSet(ModelViewSet):
     """Consulta e manutenção de recursos; criação ocorre nas rotas de projeto/tarefa."""
     serializer_class = RecursoSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['projeto', 'tarefa', 'tipo', 'adicionado_por']
+    search_fields = ['titulo', 'descricao', 'url', 'projeto__nome', 'tarefa__titulo']
+    ordering_fields = ['titulo', 'criado_em', 'tipo']
+    ordering = ['-criado_em', '-id']
     http_method_names = ['get', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):

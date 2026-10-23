@@ -2,6 +2,9 @@ from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.db import transaction
 from django.db.models import Exists, OuterRef
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -17,6 +20,11 @@ User = get_user_model()
 class ProjetoViewSet(ModelViewSet):
     serializer_class = ProjetoSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'criador', 'data_limite', 'prazo_antecipado', 'icone']
+    search_fields = ['nome', 'descricao', 'criador__name', 'criador__username']
+    ordering_fields = ['nome', 'data_criacao', 'data_limite', 'prazo_antecipado', 'status']
+    ordering = ['-fixado_usuario', '-data_criacao', '-id']
 
     def _get_membro(self, projeto, usuario):
         return projeto.membros.filter(usuario=usuario).first()
@@ -26,6 +34,47 @@ class ProjetoViewSet(ModelViewSet):
         if membro is None:
             return False
         return membro.cargo in {ProjetoMembro.CARGO_OWNER, ProjetoMembro.CARGO_ADMIN}
+
+    def _resumo_dashboard(self, projeto, tarefas=None):
+        tarefas = list(tarefas if tarefas is not None else projeto.tarefas.all())
+        total = len(tarefas)
+        concluidas = sum(1 for tarefa in tarefas if tarefa.status == Tarefa.STATUS_CONCLUIDO)
+        planejadas = sum(1 for tarefa in tarefas if tarefa.status == Tarefa.STATUS_PLANEJADO)
+        em_andamento = sum(1 for tarefa in tarefas if tarefa.status == Tarefa.STATUS_EM_ANDAMENTO)
+        hoje = timezone.localdate()
+        atrasadas = [
+            tarefa for tarefa in tarefas
+            if tarefa.status != Tarefa.STATUS_CONCLUIDO
+            and tarefa.data_limite is not None
+            and tarefa.data_limite < hoje
+        ]
+        urgencias = {
+            Tarefa.PRIORIDADE_MUITO_BAIXA: 0,
+            Tarefa.PRIORIDADE_BAIXA: 0,
+            Tarefa.PRIORIDADE_NEUTRA: 0,
+            Tarefa.PRIORIDADE_ALTA: 0,
+            Tarefa.PRIORIDADE_MUITO_ALTA: 0,
+        }
+        for tarefa in tarefas:
+            nivel = tarefa.urgencia
+            if nivel in urgencias:
+                urgencias[nivel] += 1
+
+        return {
+            'projeto': projeto.pk,
+            'progresso': round(concluidas * 100 / total, 2) if total else 0,
+            'tarefas': {
+                'total': total,
+                'planejadas': planejadas,
+                'em_andamento': em_andamento,
+                'concluidas': concluidas,
+                'atrasadas': len(atrasadas),
+            },
+            'urgencias': urgencias,
+            'tarefas_atrasadas': TarefaSerializer(
+                atrasadas, many=True, context={'request': self.request}
+            ).data,
+        }
 
     def get_queryset(self):
         fixados = ProjetoFixado.objects.filter(projeto_id=OuterRef('pk'), usuario=self.request.user)
@@ -65,6 +114,45 @@ class ProjetoViewSet(ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+
+    @action(detail=False, methods=['get'], url_path='dashboard')
+    def dashboard_geral(self, request):
+        projetos = list(self.get_queryset().prefetch_related('tarefas'))
+        resumos = []
+        total_tarefas = total_concluidas = total_atrasadas = 0
+        urgencias = {
+            Tarefa.PRIORIDADE_MUITO_BAIXA: 0,
+            Tarefa.PRIORIDADE_BAIXA: 0,
+            Tarefa.PRIORIDADE_NEUTRA: 0,
+            Tarefa.PRIORIDADE_ALTA: 0,
+            Tarefa.PRIORIDADE_MUITO_ALTA: 0,
+        }
+
+        for projeto in projetos:
+            tarefas = list(projeto.tarefas.all())
+            resumo = self._resumo_dashboard(projeto, tarefas)
+            resumos.append(resumo)
+            total_tarefas += resumo['tarefas']['total']
+            total_concluidas += resumo['tarefas']['concluidas']
+            total_atrasadas += resumo['tarefas']['atrasadas']
+            for nivel, quantidade in resumo['urgencias'].items():
+                urgencias[nivel] += quantidade
+
+        return Response({
+            'progresso_geral': round(total_concluidas * 100 / total_tarefas, 2) if total_tarefas else 0,
+            'total_projetos': len(projetos),
+            'total_tarefas': total_tarefas,
+            'tarefas_concluidas': total_concluidas,
+            'tarefas_atrasadas': total_atrasadas,
+            'urgencias': urgencias,
+            'projetos': resumos,
+        })
+
+    @action(detail=True, methods=['get'], url_path='dashboard')
+    def dashboard_projeto(self, request, pk=None):
+        projeto = self.get_object()
+        tarefas = projeto.tarefas.prefetch_related('dependencias', 'microtarefas').order_by('-data_criacao', '-id')
+        return Response(self._resumo_dashboard(projeto, tarefas))
 
     @action(detail=True, methods=['get', 'post'], url_path='recursos')
     def recursos(self, request, pk=None):
@@ -114,7 +202,7 @@ class ProjetoViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='meus-projetos')
     def meus_projetos(self, request):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
