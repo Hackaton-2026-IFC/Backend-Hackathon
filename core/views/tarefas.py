@@ -55,13 +55,8 @@ class TarefaViewSet(ModelViewSet):
             return response
 
     def partial_update(self, request, *args, **kwargs):
-        self.get_object()
-        with transaction.atomic():
-            before = snapshot(self.get_object())
-            response = super().partial_update(request, *args, **kwargs)
-            task = self.get_object()
-            registrar(task, request.user, 'tarefa_alterada', before, snapshot(task))
-            return response
+        # O DRF chama self.update() internamente; a auditoria ocorre somente lá.
+        return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         self.get_object()
