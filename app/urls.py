@@ -24,6 +24,7 @@ from core.views import (
     UserViewSet,
 )
 from uploader.router import router as uploader_router
+from core.views.agente import ProjectAgentView
 from core.views.comentarios import comentarios, comentario_detalhe
 from core.views.atividade import ProjectActivityView, TaskActivityView
 from core.views.calendario import calendario, calendario_evento, export_google_agenda
@@ -67,6 +68,7 @@ urlpatterns = [
     path('api/projetos/<int:pk>/calendario/', calendario, name='calendario-projeto'),
     path('api/projetos/<int:pk>/calendario/<int:event_id>/', calendario_evento, name='calendario-evento'),
     path('api/projetos/<int:pk>/google-agenda/', export_google_agenda, name='google-agenda'),
+    path('api/projetos/<int:pk>/agente/', ProjectAgentView.as_view(), name='agente-projeto'),
     path('api/projetos/<int:pk>/atividades/', ProjectActivityView.as_view()),
     path('api/tarefas/<int:pk>/atividades/', TaskActivityView.as_view()),
     path('api/tarefas/<int:pk>/comentarios/', comentarios, name='comentarios-tarefa'),
