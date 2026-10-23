@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import Projeto, ProjetoMembro, ProjetoFixado, Tarefa
-from core.serializers import ProjetoMembroSerializer, ProjetoSerializer, TarefaSerializer
+from core.serializers import ProjetoMembroSerializer, ProjetoSerializer, TarefaSerializer, RecursoSerializer
 
 User = get_user_model()
 
@@ -64,6 +64,19 @@ class ProjetoViewSet(ModelViewSet):
             raise PermissionDenied('Apenas o owner pode excluir o projeto.')
         return super().destroy(request, *args, **kwargs)
 
+
+
+    @action(detail=True, methods=['get', 'post'], url_path='recursos')
+    def recursos(self, request, pk=None):
+        """Lista ou adiciona links de apoio vinculados ao projeto."""
+        projeto = self.get_object()
+        if request.method == 'GET':
+            recursos = projeto.recursos.select_related('adicionado_por', 'tarefa').all()
+            return Response(RecursoSerializer(recursos, many=True, context={'request': request}).data)
+        serializer = RecursoSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(projeto=projeto, tarefa=None, adicionado_por=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'], url_path='kanban')
     def kanban(self, request, pk=None):
