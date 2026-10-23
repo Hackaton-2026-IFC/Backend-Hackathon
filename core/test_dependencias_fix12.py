@@ -11,7 +11,7 @@ from core.serializers.tarefas import TarefaSerializer
 class DependenciasTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username='teste_dep', password='senha_forte_123'
+            email='teste-dep@example.com', password='senha_forte_123'
         )
         self.projeto = Projeto.objects.create(nome='Projeto teste', criador=self.user)
         ProjetoMembro.objects.create(projeto=self.projeto, usuario=self.user)
