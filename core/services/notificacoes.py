@@ -1,8 +1,12 @@
 from django.conf import settings
+import logging
+
 from django.core.mail import send_mail
 from django.db import transaction
 
 from core.models import Notificacao
+
+logger = logging.getLogger(__name__)
 
 
 def _frontend_link(path):
@@ -30,13 +34,17 @@ def _enviar_email(notification_id):
     if url:
         body = f'{body}\n\nAbrir: {url}'
 
-    sent = send_mail(
+    try:
+        sent = send_mail(
         subject=f'[Hackathon] {notification.titulo}',
         message=body,
         from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
         recipient_list=[notification.destinatario.email],
-        fail_silently=True,
-    )
+        fail_silently=False,
+        )
+    except (OSError, ConnectionError, TimeoutError) as exc:
+        logger.warning('Falha no envio de notificação por e-mail (id=%s): %s', notification_id, type(exc).__name__)
+        return
     if sent:
         Notificacao.objects.filter(pk=notification.pk).update(email_enviado=True)
 
