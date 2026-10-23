@@ -33,7 +33,8 @@ class NotaKeepTests(TestCase):
         self.assertEqual(created.data['cor'], '#AABBCC')
 
         note_id = created.data['id']
-        self.assertEqual(len(self.client.get('/api/notas/?search=Transformar').data['results']), 1)
+        search = self.client.get('/api/notas/?search=Transformar')
+        self.assertEqual(len(search.data['results']), 1)
         self.assertEqual(
             self.client.patch(f'/api/notas/{note_id}/', {'arquivada': True}, format='json').status_code,
             200,
