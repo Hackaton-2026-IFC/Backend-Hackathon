@@ -1,0 +1,30 @@
+name: Backend Django tests
+
+on:
+  pull_request:
+    branches: [DEV, main]
+  push:
+    branches: [DEV, main]
+
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install system dependencies and PDM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmagic1
+          python -m pip install --upgrade pip pdm
+      - name: Install project dependencies
+        run: pdm install --frozen-lockfile
+      - name: Django checks and tests
+        env:
+          DEBUG: "True"
+          SECRET_KEY: test-only-django-secret-do-not-use-in-production
+        run: |
+          pdm run python manage.py check
+          pdm run python manage.py test core uploader --verbosity 2
