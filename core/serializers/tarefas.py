@@ -18,7 +18,7 @@ class TarefaSerializer(serializers.ModelSerializer):
             'id', 'projeto', 'titulo', 'descricao', 'prioridade', 'status',
             'dependencias', 'responsavel', 'criado_por', 'concluida',
             'data_criacao', 'data_limite', 'prazo_antecipado',
-            'urgencia', 'urgencia_manual', 'microtarefas',
+            'urgencia', 'urgencia_manual', 'microtarefas', 'clima_influencia', 'localizacao',
         ]
         read_only_fields = ['id', 'data_criacao', 'criado_por', 'microtarefas']
 
@@ -34,6 +34,10 @@ class TarefaSerializer(serializers.ModelSerializer):
         if projeto is None or not projeto.membros.filter(usuario=request.user).exists():
             raise serializers.ValidationError({'projeto': 'Você não participa deste projeto.'})
 
+        depende_clima = attrs.get('clima_influencia', getattr(self.instance, 'clima_influencia', False))
+        localizacao = attrs.get('localizacao', getattr(self.instance, 'localizacao', ''))
+        if depende_clima and not localizacao.strip():
+            raise serializers.ValidationError({'localizacao': 'Informe uma cidade quando o clima influenciar na tarefa.'})
         prazo_oficial = attrs.get('data_limite', getattr(self.instance, 'data_limite', None))
         antecipado = attrs.get('prazo_antecipado', getattr(self.instance, 'prazo_antecipado', None))
         if antecipado and not prazo_oficial:

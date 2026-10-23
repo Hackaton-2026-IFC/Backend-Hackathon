@@ -55,6 +55,8 @@ class Tarefa(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_limite = models.DateField(null=True, blank=True)
     prazo_antecipado = models.DateField(null=True, blank=True)
+    clima_influencia = models.BooleanField(default=False)
+    localizacao = models.CharField(max_length=255, blank=True, default='')
     urgencia_manual = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, null=True, blank=True)
 
     @property
