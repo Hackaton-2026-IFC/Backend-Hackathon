@@ -1,97 +1,198 @@
-# Template de projeto Django com DRF e PDM
+# Backend Hackathon 2026
 
-Esse é um template de projeto Django com DRF, PDM e muito mais. Ele já vem com algumas configurações e pacotes pré-instalados, como o PDM, Django, Django REST Framework, PostgreSQL, SQLite, Swagger, black, isort, Render, Cloudinary, Corsheaders, Django-Extensions, Django-Filter, dotenv, dj-database-url, drf-spectacular, gunicorn, netifaces, rest-framework-simplejwt, whitenoise e passage.id
+API REST do backend do **Hackathon 2026** do Instituto Federal Catarinense - Campus Araquari, voltado aos alunos do 3° ano do curso Técnico em Informática para Internet.
 
-Esse template já está pronto para ser utilizado em produção, com o [Render](http://render.com) e o [PostgreSQL](https://www.postgresql.org/). Mas também pode ser utilizado em desenvolvimento, com o [PDM](https://pdm.fming.dev/) e o [SQLite](https://www.sqlite.org/index.html).
+---
 
-O template também já vem com alguns arquivos de configuração pré-configurados, como:
+## Stack Tecnológica
 
-- `pyproject.toml`: Arquivo de configuração do PDM.
-- `Procfile`: Arquivo de configuração do Fl0.
-- `settings.py`: Arquivo de configuração do Django.
-- `urls.py`: Arquivo de configuração das rotas do Django.
-- `wsgi.py`: Arquivo de configuração do Gunicorn.
-- `.env.exemplo`: Arquivo de exemplo de configuração das variáveis de ambiente.
-- `.gitignore`: Arquivo de configuração do Git, para ignorar arquivos e diretórios.
+- **Linguagem:** Python (v3.12+)
+- **Gerenciador de Dependências:** [PDM](https://pdm-project.org/)
+- **Framework Web:** Django (v5+)
+- **API REST:** Django REST Framework (DRF)
+- **Autenticação:** SimpleJWT (`rest-framework-simplejwt`)
+- **Documentação da API:** `drf-spectacular` (Swagger / OpenAPI 3)
+- **Armazenamento de Mídia:** Cloudinary
+- **Banco de Dados (Dev):** SQLite3
+- **Banco de Dados (Prod):** PostgreSQL
+- **Servidor de Produção:** Gunicorn & WhiteNoise
+- **Plataforma de Deploy:** Fabroku
 
-O template também traz o usuário padrão modificado, com o login sendo feito com o `e-mail` e não com o `username`. Inclusões de campos, como `telefone`, `data de nascimento` e `foto de perfil`, podem ser feitas facilmente.
+---
 
-O projeto Django criado chama-se `app` e a aplicação Django criada chama-se `core`. O projeto já vem com um modelo de usuário customizado, com autenticação pelo `passage.id`. Arquivos estáticos, como fotos, podem ser armazenados no [Cloudinary](https://cloudinary.com/).
+## Arquitetura e Estrutura de Pastas
 
-O projeto também já vem com a documentação da API, gerada automaticamente pelo Swagger, e com a formatação de código Python, feita pelo black e pelo isort.
+O projeto adota uma estrutura modularizada baseada em aplicações Django (`core`, `uploader`), com configurações centralizadas no pacote `app`.
 
-## Instalação e Configuração
+```text
+Backend-Hackathon/
+├── .vscode/                   # Configurações do ambiente de desenvolvimento (VS Code)
+├── app/                       # Módulo de configurações principais do Django
+│   ├── __init__.py
+│   ├── asgi.py                # Interface ASGI para serviços assíncronos
+│   ├── pagination.py          # Classes customizadas de paginação da API
+│   ├── settings.py            # Configurações gerais (Apps, DB, JWT, Cloudinary, CORS)
+│   ├── urls.py                # Roteamento global de URLs da API
+│   └── wsgi.py                # Interface WSGI para servidores Web (Gunicorn)
+├── core/                      # Aplicação principal de domínio de negócio
+│   ├── migrations/            # Histórico de migrações do banco de dados
+│   ├── models/                # Modelos de dados (Usuários, Categorias, etc.)
+│   ├── serializers/           # Serializadores do DRF para conversão de dados
+│   ├── views/                 # ViewSets e endpoints da API
+│   ├── __init__.py
+│   ├── admin.py               # Painel administrativo do Django
+│   └── apps.py                # Configuração do app Core
+├── uploader/                  # Aplicação responsável pela gestão e envio de mídias
+│   ├── helpers/               # Funções auxiliares para manipulação de arquivos
+│   ├── migrations/            # Migrações da app uploader
+│   ├── models/                # Modelos de metadados das mídias enviadas
+│   ├── serializers/           # Serializadores de arquivos e mídias
+│   ├── views/                 # Endpoints para upload/gerenciamento de mídias
+│   ├── admin.py
+│   ├── apps.py
+│   ├── router.py              # Rotas do uploader
+│   ├── storage.py             # Integração com armazenamento Cloudinary
+│   └── tests.py               # Testes unitários do uploader
+├── http/drf/                  # Requisições de teste HTTP (REST Client / Insomnia)
+├── media/videos/              # Armazenamento local temporário de mídias em desenvolvimento
+├── scripts/                   # Scripts auxiliares do projeto
+├── .env.example               # Exemplo de variáveis de ambiente
+├── .gitignore                 # Arquivos ignorados pelo Git
+├── .pdm-python                # Apontador do interpretador Python do PDM
+├── .pre-commit-config.yaml    # Hooks do Git para formatação/linting pré-commit
+├── .pylintrc                  # Configuração do linter PyLint
+├── .python-version            # Versão especificada do Python
+├── Procfile                   # Comando de inicialização no Fabroku (Gunicorn)
+├── build.sh                   # Script de compilação/deploy automático para produção
+├── db.sqlite3                 # Banco de dados local para desenvolvimento
+├── dump.json                  # Carga/fixture inicial de dados
+├── manage.py                  # CLI do Django para gerenciamento de comandos
+├── pdm.lock                   # Trava com versões exatas das dependências do PDM
+├── pyproject.toml             # Configurações do projeto e dependências do PDM
+├── requirements.txt           # Exportação de dependências para compatibilidade
+└── runtime.txt                # Versão de tempo de execução do Python para o PaaS
+```
 
-1. Certifique-se de ter o [Python](https://www.python.org/) instalado em seu sistema.
+---
 
-2. Crie um novo projeto a partir desse template:
-- Acesse o _template_ em https://github.com/marrcandre/template_django_pdm.
-- Clique no botão `Use this template` em `Create a new repository`.
-- Preencha as informações solicitadas:
-  - `Owner`: <seu usuário no GitHub>
-  - `Repository name`: `livraria`
-- Click no botão `Create repository`.
+## Como Rodar o Projeto Localmente (Usando PDM)
 
-3. Abra o projeto no vscode e execute o terminal.
+### Pré-requisitos
 
-2. Crie um ambiente virtual usando o [PDM](https://pdm.fming.dev/):
+- **Python** (v3.11 ou superior)
+- **PDM** instalado na sua máquina (`pip install pdm` ou via Homebrew/Pipx)
 
+---
+
+### Passo a Passo
+
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/seu-usuario/Backend-Hackathon.git
+   cd Backend-Hackathon
    ```
+
+2. **Instale as dependências com o PDM**
+   ```bash
    pdm install
    ```
 
-3. Crie o arquivo .env, a partir do arquivo .env.exemplo, e configure as variáveis de ambiente:
-
+3. **Configure as Variáveis de Ambiente**
+   Crie o arquivo `.env` a partir do exemplo fornecido:
+   ```bash
+   cp .env.example .env
    ```
-   cp .env.exemplo .env
+   *Edite o arquivo `.env` inserindo as credenciais de desenvolvimento (Secret Key, Cloudinary, etc.).*
+
+4. **Execute as migrações do Banco de Dados**
+   ```bash
+   pdm run python manage.py migrate
    ```
 
-4. Execute o servidor de desenvolvimento:
-
+5. **(Opcional) Carregue dados iniciais (Fixtures)**
+   ```bash
+   pdm run python manage.py loaddata dump.json
    ```
+
+6. **Crie um superusuário administrativo**
+   ```bash
+   pdm run python manage.py createsuperuser
+   ```
+
+7. **Inicie o servidor de desenvolvimento**
+   ```bash
    pdm run dev
+   # ou: pdm run python manage.py runserver
    ```
 
-5. Acesse a API em http://localhost:19003/api/
+8. **Acesse a aplicação:**
+   - **API Base:** `http://localhost:8000/api/`
+   - **Documentação Swagger:** `http://localhost:8000/api/swagger/`
+   - **Painel Admin:** `http://localhost:8000/admin/`
 
-## Uso da API
+---
 
-A documentação completa dos endpoints da API e exemplos de uso estão disponíveis na [Documentação da API](http://localhost:19003/api/swagger/).
+## Autenticação (SimpleJWT)
 
-## Comandos Úteis
+A API utiliza autenticação baseada em Tokens JWT.
 
-- `pdm run dev`: Executa o servidor de desenvolvimento. Antes de executar o servidor, descobre o endereço IP da máquina e atualiza o arquivo `.env` com o endereço IP.
-- `pdm run migrate`: Executa as migrações do banco de dados. Antes de executar o `migrate`, executa o `makemigrations`. Depois de executar o `migrate`, executa o `graph_models`, atualizando o diagrama de classes dos modelos do projeto.
-- Para mais detalhes, consulte o arquivo `pyproject.toml`, na seção `[tool.pdm.scripts]`.
+### Endpoints principais de autenticação:
+- **Obter Token (Login):** `POST /api/token/`
+- **Atualizar Token (Refresh):** `POST /api/token/refresh/`
 
-## Detalhes do Projeto
+Exemplo de cabeçalho de requisição autenticada:
+```http
+Authorization: Bearer <SEU_ACCESS_TOKEN>
+```
 
-Esse projeto utiliza os seguintes pacotes e tecnologias:
+---
 
-- [PDM](https://pdm.fming.dev/): Gerenciador de pacotes e ambiente virtual para Python.
-- [Django](https://www.djangoproject.com/): Framework web de alto nível escrito em Python.
-- [Django REST Framework](https://www.django-rest-framework.org/): Framework para desenvolvimento de APIs REST com Django.
-- [PostgreSQL](https://www.postgresql.org/): Banco de dados relacional, utilizado no ambiente de produção.
-- [SQLite](https://www.sqlite.org/index.html): Banco de dados relacional, utilizado no ambiente de desenvolvimento.
-- [Swagger](https://swagger.io/): Framework para documentação de APIs REST.
-- [Ruff] (http://https://docs.astral.sh/ruff/): Linter e formatador de código Python, escrito em Rust.
-- [Render](http://render.com): Ferramenta de _deploy_ de aplicações _backend_.
-- [Cloudinary](https://cloudinary.com/): Serviço de armazenamento de arquivos estáticos em nuvem.
-- [Corsheaders](https://pypi.org/project/django-cors-headers/): Pacote para permitir que aplicações frontend acessem a API.
-- [Django-Extensions](https://django-extensions.readthedocs.io/en/latest/): Pacote com extensões para o Django, como o `shell_plus`, que permite acessar o shell do Django com todos os modelos importados e o comando `graph_models`, que gera um diagrama de classes dos modelos do projeto.
-- [Django-Filter](https://django-filter.readthedocs.io/en/stable/): Pacote para filtragem, ordenação e paginação de dados em APIs REST.
-- [dotenv](https://pypi.org/project/python-dotenv/): Pacote para carregar variáveis de ambiente a partir de um arquivo `.env`.
-- [dj-database-url](https://pypi.org/project/dj-database-url/): Pacote para configurar o banco de dados a partir de uma URL.
-- [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/): Pacote para geração de documentação de APIs REST com o Swagger.
-- [gunicorn](https://gunicorn.org/): Pacote para servir aplicações Django em produção.
-- [netifaces](https://pypi.org/project/netifaces/): Pacote para obter o endereço IP da máquina.
-- [rest-framework-simplejwt](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/): Pacote para autenticação JWT em APIs REST.
-- [whitenoise](http://whitenoise.evans.io/en/stable/): Pacote para servir arquivos estáticos em aplicações Django.
-- [passage.id](https://passage.id): Pacote para autenticação de usuários.
+## Armazenamento de Arquivos (Cloudinary)
 
-## Licença
+As fotos de perfil e mídias do sistema são processadas pelo app `uploader` e armazenadas na nuvem através do **Cloudinary**.
 
-Este projeto está licenciado sob a [Licença GPL](https://www.gnu.org/licenses/gpl-3.0.html), uma licença de software livre.
+As variáveis necessárias no arquivo `.env` para habilitar a integração são:
+```env
+CLOUDINARY_CLOUD_NAME=seu_cloud_name
+CLOUDINARY_API_KEY=sua_api_key
+CLOUDINARY_API_SECRET=seu_api_secret
+```
 
+---
 
+## Deploy no Fabroku
 
+O repositório possui suporte nativo para deploy no **Fabroku** utilizando o `Procfile`, o script `build.sh` e o gerenciador `pdm`.
+
+### Configuração no Fabroku:
+
+1. **Atribua as Variáveis de Ambiente no painel do Fabroku:**
+   - `SECRET_KEY`: Sua chave secreta do Django.
+   - `DEBUG`: `False`
+   - `DATABASE_URL`: URL do banco de dados PostgreSQL fornecido pelo Fabroku.
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
+
+2. **Script de Build (`build.sh`):**
+   Garante a instalação das dependências, migrações e coleta de arquivos estáticos durante o deploy:
+   ```bash
+   #!/usr/bin/env bash
+   set -o errexit
+
+   pdm install --prod
+   python manage.py collectstatic --no-input
+   python manage.py migrate
+   ```
+
+3. **Comando de Execução (`Procfile`):**
+   ```text
+   web: gunicorn app.wsgi:application --log-file -
+   ```
+
+---
+
+## Scripts e Comandos Úteis do PDM
+
+- `pdm run dev`: Executa o servidor de desenvolvimento.
+- `pdm run migrate`: Aplica migrações pendentes no banco de dados.
+- `pdm run makemigrations`: Cria novas migrações a partir dos modelos.
+- `pdm run lint`: Executa a verificação de código com o linter configurado.
