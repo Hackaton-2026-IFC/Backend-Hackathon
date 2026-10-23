@@ -1,5 +1,6 @@
 from datetime import date
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -52,7 +53,7 @@ class MeuDiaView(APIView):
             'dependencias', 'tarefas_dependentes', 'microtarefas')
         # Por padrão, tarefas atribuídas ao usuário ou sem responsável.
         if request.query_params.get('equipe') != 'true':
-            qs = qs.filter(responsavel__in=[request.user, None])
+            qs = qs.filter(Q(responsavel=request.user) | Q(responsavel__isnull=True))
         today = timezone.localdate()
         evaluated = [(task, *evaluate(task, today)) for task in qs]
         evaluated.sort(key=lambda x: (-x[1], x[0].data_limite or date.max, x[0].pk))
