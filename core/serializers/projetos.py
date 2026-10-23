@@ -32,12 +32,22 @@ class ProjetoSerializer(serializers.ModelSerializer):
             'icone',
             'status',
             'data_limite',
+            'prazo_antecipado',
             'data_criacao',
             'criador',
             'participantes',
             'fixado',
         ]
         read_only_fields = ['id', 'data_criacao', 'criador', 'participantes']
+
+    def validate(self, attrs):
+        oficial = attrs.get('data_limite', getattr(self.instance, 'data_limite', None))
+        antecipado = attrs.get('prazo_antecipado', getattr(self.instance, 'prazo_antecipado', None))
+        if antecipado and not oficial:
+            raise serializers.ValidationError({'prazo_antecipado': 'Informe o prazo oficial antes do antecipado.'})
+        if antecipado and antecipado > oficial:
+            raise serializers.ValidationError({'prazo_antecipado': 'O prazo antecipado não pode ultrapassar o oficial.'})
+        return attrs
 
     def get_fixado(self, obj):
         if hasattr(obj, 'fixado_usuario'):
