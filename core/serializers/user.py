@@ -32,6 +32,7 @@ class UserSerializer(ModelSerializer):
             'last_login',
             'groups',
         ]
+        read_only_fields = ['id', 'is_active', 'is_staff', 'is_superuser', 'last_login', 'groups']
         depth = 1
 
 
@@ -44,3 +45,11 @@ class UserRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+
+class UserDirectorySerializer(ModelSerializer):
+    """Dados mínimos para selecionar participantes em projetos."""
+
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'username']
