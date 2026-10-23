@@ -16,6 +16,7 @@ class UserSerializer(ModelSerializer):
         write_only=True,
     )
     profile_image = ImageSerializer(required=False, read_only=True)
+    google_photo_url = serializers.URLField(read_only=True)
 
     class Meta:
         model = User
@@ -24,7 +25,7 @@ class UserSerializer(ModelSerializer):
             'email',
             'name',
             'username',
-            'profile_image',
+            'profile_image', 'google_photo_url',
             'profile_image_attachment_key',
             'is_active',
             'is_staff',
