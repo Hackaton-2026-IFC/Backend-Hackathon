@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 import requests
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
@@ -11,6 +12,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from core.models.google_identity import GoogleIdentity
 
 User = get_user_model()
+
+
+def google_photo_url(payload):
+    url = payload.get('picture', '')
+    if not isinstance(url, str) or len(url) > 1000:
+        return ''
+    parsed = urlparse(url)
+    # Apenas endereços HTTPS dos provedores Google; sem download no backend.
+    if parsed.scheme != 'https' or parsed.hostname not in ('lh3.googleusercontent.com', 'googleusercontent.com'):
+        return ''
+    return url
+
 
 class GoogleCredentialSerializer(serializers.Serializer):
     credential = serializers.CharField(trim_whitespace=False)
@@ -49,12 +62,16 @@ class GoogleLoginView(APIView):
         identity = GoogleIdentity.objects.select_related('user').filter(sub=sub).first()
         if identity:
             user = identity.user
+            photo = google_photo_url(payload)
+            if photo and photo != user.google_photo_url:
+                user.google_photo_url = photo
+                user.save(update_fields=['google_photo_url'])
         else:
             if User.objects.filter(email__iexact=email).exists():
                 return Response({'detail': 'Este e-mail já possui uma conta. Entre com a senha e vincule o Google no perfil.'}, status=409)
             try:
                 with transaction.atomic():
-                    user = User.objects.create_user(email=email, name=payload.get('name', ''))
+                    user = User.objects.create_user(email=email, name=payload.get('name', ''), google_photo_url=google_photo_url(payload))
                     user.set_unusable_password()
                     user.save(update_fields=['password'])
                     GoogleIdentity.objects.create(user=user, sub=sub)
@@ -84,6 +101,10 @@ class GoogleLinkView(APIView):
             GoogleIdentity.objects.get_or_create(user=request.user, defaults={'sub': payload['sub']})
         except IntegrityError:
             return Response({'detail': 'Conflito ao vincular identidade Google.'}, status=409)
+        photo = google_photo_url(payload)
+        if photo and photo != request.user.google_photo_url:
+            request.user.google_photo_url = photo
+            request.user.save(update_fields=['google_photo_url'])
         return Response({'google_vinculado': True})
 
     def get(self, request):
