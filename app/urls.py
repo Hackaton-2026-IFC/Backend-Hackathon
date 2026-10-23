@@ -23,6 +23,7 @@ from core.views import (
     UserViewSet,
 )
 from uploader.router import router as uploader_router
+from core.views.calendario import calendario, calendario_evento, export_google_agenda
 from core.views.google_auth import GoogleLoginView, GoogleLinkView
 from core.views.meu_dia import MeuDiaView
 
@@ -59,6 +60,9 @@ urlpatterns = [
     path('api/auth/google/vincular/', GoogleLinkView.as_view(), name='google-link'),
     # Registro de usuários
     path('api/registro/', UserRegistrationView.as_view(), name='user_registration'),
+    path('api/projetos/<int:pk>/calendario/', calendario, name='calendario-projeto'),
+    path('api/projetos/<int:pk>/calendario/<int:event_id>/', calendario_evento, name='calendario-evento'),
+    path('api/projetos/<int:pk>/google-agenda/', export_google_agenda, name='google-agenda'),
     # API
     path('api/', include(router.urls)),
     path('api/media/', include(uploader_router.urls)),  # nova linha
