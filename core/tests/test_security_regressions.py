@@ -48,6 +48,11 @@ class SecurityRegressionTests(TestCase):
         self.assertFalse(self.owner.is_superuser)
         self.assertTrue(self.owner.is_active)
 
+        directory = self.client.get('/api/usuarios/')
+        self.assertEqual(directory.status_code, 200)
+        self.assertNotIn('is_superuser', directory.data['results'][0])
+        self.assertNotIn('email', directory.data['results'][0])
+        self.assertEqual(self.client.get(f'/api/usuarios/{self.admin.id}/').status_code, 403)
         self.assertEqual(self.client.post('/api/usuarios/', {'email': 'new@example.com'}).status_code, 405)
         self.assertEqual(self.client.delete(f'/api/usuarios/{self.admin.id}/').status_code, 405)
 
