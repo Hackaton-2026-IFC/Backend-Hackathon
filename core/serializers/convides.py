@@ -17,6 +17,13 @@ class ConviteProjetoSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'enviado_por', 'status', 'criado_em', 'respondido_em']
 
 
+    def validate_cargo(self, value):
+        # Convites não podem conceder direitos de proprietário.
+        if value != ProjetoMembro.CARGO_ADMIN:
+            raise serializers.ValidationError('Só é permitido convidar administradores.')
+        return value
+
+
 class RespostaConviteSerializer(serializers.ModelSerializer):
     acao = serializers.ChoiceField(choices=['aceitar', 'recusar'])
 
