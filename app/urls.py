@@ -15,6 +15,7 @@ from core.views import (
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
     CustomTokenVerifyView,
+    MicroTarefaViewSet,
     ProjetoViewSet,
     TarefaViewSet,
     UserRegistrationView,
@@ -28,6 +29,7 @@ router.register(r'categorias', CategoriaViewSet, basename='categorias')
 router.register(r'usuarios', UserViewSet, basename='usuarios')
 router.register(r'projetos', ProjetoViewSet, basename='projetos')
 router.register(r'tarefas', TarefaViewSet, basename='tarefas')
+router.register(r'microtarefas', MicroTarefaViewSet, basename='microtarefas')
 router.register(r'convites', ConviteProjetoViewSet, basename='convites')
 
 urlpatterns = [
