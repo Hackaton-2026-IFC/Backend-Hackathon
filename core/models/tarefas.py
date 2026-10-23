@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from .projetos import Projeto
 
@@ -54,6 +55,27 @@ class Tarefa(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_limite = models.DateField(null=True, blank=True)
     prazo_antecipado = models.DateField(null=True, blank=True)
+    urgencia_manual = models.CharField(max_length=20, choices=PRIORIDADE_CHOICES, null=True, blank=True)
+
+    @property
+    def urgencia(self):
+        if self.status == self.STATUS_CONCLUIDO or self.concluida:
+            return None
+        if self.urgencia_manual:
+            return self.urgencia_manual
+        prazo = self.prazo_antecipado or self.data_limite
+        if prazo is None:
+            return self.PRIORIDADE_NEUTRA
+        dias = (prazo - timezone.localdate()).days
+        if dias <= 0:
+            return self.PRIORIDADE_MUITO_ALTA
+        if dias <= 2:
+            return self.PRIORIDADE_ALTA
+        if dias <= 7:
+            return self.PRIORIDADE_NEUTRA
+        if dias <= 14:
+            return self.PRIORIDADE_BAIXA
+        return self.PRIORIDADE_MUITO_BAIXA
 
     def dependencias_pendentes(self):
         if not self.pk:
