@@ -6,3 +6,5 @@ from .microtarefas import MicroTarefa
 from .user import User
 
 from .recursos import Recurso
+
+from .google_identity import GoogleIdentity
