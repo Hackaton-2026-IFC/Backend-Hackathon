@@ -38,7 +38,10 @@ class Notificacao(models.Model):
     class Meta:
         ordering = ['-criada_em', '-id']
         indexes = [
-            models.Index(fields=['destinatario', 'lida_em', 'criada_em']),
+            models.Index(
+                fields=['destinatario', 'lida_em', 'criada_em'],
+                name='core_notifi_destina_67c95d_idx',
+            ),
         ]
 
     def __str__(self):
