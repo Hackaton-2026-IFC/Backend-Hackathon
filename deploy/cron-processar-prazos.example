@@ -1,0 +1,5 @@
+# Exemplo de crontab no servidor de produção. Ajuste os caminhos e a timezone do HOST.
+# Rode no host que tem acesso ao banco de dados de produção.
+# Verifique com: crontab -l
+CRON_TZ=America/Sao_Paulo
+0 8 * * * cd /CAMINHO/Backend-Hackathon && /CAMINHO/PDM run python manage.py processar_prazos >> /CAMINHO/logs/prazos.log 2>&1
