@@ -28,7 +28,13 @@ class ConviteProjeto(models.Model):
     respondido_em = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('projeto', 'usuario')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['projeto', 'usuario'],
+                condition=models.Q(status='pendente'),
+                name='unique_convite_pendente_por_projeto',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.usuario} -> {self.projeto} ({self.status})'
