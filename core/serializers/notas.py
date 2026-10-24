@@ -5,7 +5,7 @@ from PIL import Image as PillowImage
 
 from rest_framework import serializers
 
-from core.models import Nota, Projeto
+from core.models import Nota, NotaPreferencia, Projeto
 
 
 HEX_COLOR = re.compile(r'^#[0-9A-Fa-f]{6}$')
@@ -14,6 +14,8 @@ HEX_COLOR = re.compile(r'^#[0-9A-Fa-f]{6}$')
 class NotaSerializer(serializers.ModelSerializer):
     usuario = serializers.PrimaryKeyRelatedField(read_only=True)
     imagem_url = serializers.SerializerMethodField()
+    fixada = serializers.BooleanField(required=False)
+    ordem = serializers.SerializerMethodField()
     usuario_nome = serializers.CharField(source='usuario.name', read_only=True, allow_null=True)
 
     class Meta:
@@ -30,14 +32,60 @@ class NotaSerializer(serializers.ModelSerializer):
             'imagem_url',
             'cor',
             'fixada',
+            'ordem',
             'arquivada',
             'etiquetas',
             'lembrete_em',
             'criada_em',
             'atualizada_em',
         ]
-        read_only_fields = ['id', 'usuario', 'usuario_nome', 'imagem_url', 'criada_em', 'atualizada_em']
+        read_only_fields = ['id', 'usuario', 'usuario_nome', 'imagem_url', 'ordem', 'criada_em', 'atualizada_em']
         extra_kwargs = {'imagem': {'write_only': True, 'required': False, 'allow_null': True}}
+
+    def get_ordem(self, obj):
+        if hasattr(obj, 'ordem_usuario'):
+            return obj.ordem_usuario
+        user = self.context.get('request').user if self.context.get('request') else None
+        if not user or not user.is_authenticated:
+            return None
+        return NotaPreferencia.objects.filter(nota=obj, usuario=user).values_list('ordem', flat=True).first()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if hasattr(instance, 'fixada_usuario'):
+            data['fixada'] = bool(instance.fixada_usuario)
+        else:
+            request = self.context.get('request')
+            user = request.user if request else None
+            data['fixada'] = bool(
+                user and user.is_authenticated
+                and NotaPreferencia.objects.filter(nota=instance, usuario=user, fixada=True).exists()
+            )
+        return data
+
+    def create(self, validated_data):
+        fixada = validated_data.pop('fixada', False)
+        nota = super().create(validated_data)
+        if fixada:
+            NotaPreferencia.objects.create(nota=nota, usuario=nota.usuario, fixada=True)
+        nota.fixada_usuario = fixada
+        nota.ordem_usuario = None
+        return nota
+
+    def update(self, instance, validated_data):
+        # Só o autor pode editar a nota. A ação /preferencia/ permite
+        # que qualquer membro fixe/desafixe sem editar a nota de outro autor.
+        fixada = validated_data.pop('fixada', None)
+        nota = super().update(instance, validated_data)
+        if fixada is not None:
+            preference, _ = NotaPreferencia.objects.update_or_create(
+                nota=nota,
+                usuario=self.context['request'].user,
+                defaults={'fixada': fixada},
+            )
+            nota.fixada_usuario = preference.fixada
+            nota.ordem_usuario = preference.ordem
+        return nota
 
     def get_imagem_url(self, obj):
         if not obj.imagem:
