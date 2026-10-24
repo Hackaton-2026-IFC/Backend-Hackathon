@@ -27,9 +27,9 @@ class ProjectAgentTests(TestCase):
         )
         self.url = f'/api/projetos/{self.project}/agente/'
 
-    @patch.dict(os.environ, {}, clear=False)
+    @patch.dict(os.environ, {'GEMINI_API_KEY': ''})
     def test_fallback_local_sem_chave(self):
-        os.environ.pop('OPENAI_API_KEY', None)
+        os.environ.pop('GEMINI_API_KEY', None)
         response = self.client.post(
             self.url,
             {'objetivo': 'Entregar MVP', 'ideias': ['Automatizar relatório']},
@@ -41,18 +41,18 @@ class ProjectAgentTests(TestCase):
         self.assertIn('Automatizar relatório', response.data['analise'])
 
     @patch('core.services.ai_agent.requests.post')
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key', 'OPENAI_MODEL': 'gpt-4.1-mini'})
-    def test_openai_quando_configurada(self, post):
+    @patch.dict(os.environ, {'GEMINI_API_KEY': 'test-key', 'GEMINI_MODEL': 'gemini-2.5-flash'})
+    def test_gemini_quando_configurada(self, post):
         post.return_value = Mock(
-            json=lambda: {'output_text': 'Relatório inteligente'},
+            json=lambda: {'candidates': [{'content': {'parts': [{'text': 'Relatório inteligente'}]}}]},
             raise_for_status=lambda: None,
         )
         response = self.client.post(self.url, {'ideias': ['Feed inteligente']}, format='json')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['modo'], 'openai')
+        self.assertEqual(response.data['modo'], 'gemini')
         self.assertEqual(response.data['analise'], 'Relatório inteligente')
         headers = post.call_args.kwargs['headers']
-        self.assertEqual(headers['Authorization'], 'Bearer test-key')
+        self.assertEqual(headers['x-goog-api-key'], 'test-key')
 
     def test_bloqueia_usuario_fora_do_projeto(self):
         self.client.force_authenticate(user=self.outsider)
