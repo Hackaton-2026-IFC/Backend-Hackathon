@@ -17,7 +17,7 @@ class AgentServiceTests(SimpleTestCase):
 
     def test_extract_response_text(self):
         payload = {'candidates': [{'content': {'parts': [{'text': 'Relatório OK'}]}}]}
-        self.assertEqual(_extract_output_text(payload), 'Relatório OK')
+        self.assertEqual(_extract_gemini_text(payload), 'Relatório OK')
 
     @patch('core.services.ai_agent.build_project_context')
     @patch('core.services.ai_agent.requests.post')
