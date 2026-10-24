@@ -1,10 +1,13 @@
 import json
+import logging
 import os
 
 import requests
 from django.utils import timezone
 
 from core.models import Nota, Tarefa
+
+logger = logging.getLogger(__name__)
 
 
 def _task_data(task):
@@ -134,7 +137,7 @@ def generate_project_analysis(project, user, ideas, objective):
             'aviso': 'OPENAI_API_KEY não configurada; relatório local utilizado.',
         }
 
-    model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini').strip() or 'gpt-6-luna'
+    model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini').strip() or 'gpt-4.1-mini'
     instructions = (
         'Você é um agente de gestão de projetos. Produza um relatório objetivo em português do Brasil. '
         'Organize ideias em aplicações práticas, tarefas, ordem recomendada, dependências, riscos e próximos passos. '
@@ -170,7 +173,9 @@ def generate_project_analysis(project, user, ideas, objective):
         if not text:
             raise ValueError('Resposta da IA sem texto.')
         return {'modo': 'openai', 'modelo': model, 'analise': text}
-    except (requests.RequestException, ValueError, TypeError):
+    except (requests.RequestException, ValueError, TypeError) as exc:
+        status = exc.response.status_code if isinstance(exc, requests.HTTPError) and exc.response is not None else None
+        logger.warning('Falha no agente OpenAI (HTTP %s): %s', status or 'sem resposta', type(exc).__name__)
         return {
             'modo': 'local',
             'analise': fallback,
