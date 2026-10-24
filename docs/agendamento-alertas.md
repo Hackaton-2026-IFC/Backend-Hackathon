@@ -21,3 +21,5 @@ Alternativa: use um job/scheduler do provedor de hospedagem para executar `pdm r
 4. Confirme que o job diário está ativo no painel do provedor. **Este commit não ativa cron automaticamente na hospedagem.**
 
 Não rode a tarefa no GitHub Actions contra banco local: o runner não compartilha o banco de produção.
+
+> Verifique que o scheduler usa o mesmo banco de dados do serviço Django; a execução local não produz notificações na base publicada.
