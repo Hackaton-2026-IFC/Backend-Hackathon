@@ -16,6 +16,8 @@ from core.views import (
     CustomTokenRefreshView,
     CustomTokenVerifyView,
     MicroTarefaViewSet,
+    NotaViewSet,
+    NotificacaoViewSet,
     ProjetoViewSet,
     RecursoViewSet,
     TarefaViewSet,
@@ -23,6 +25,12 @@ from core.views import (
     UserViewSet,
 )
 from uploader.router import router as uploader_router
+from core.views.agente import ProjectAgentView
+from core.views.comentarios import comentarios, comentario_detalhe
+from core.views.atividade import ProjectActivityView, TaskActivityView
+from core.views.calendario import calendario, calendario_evento, export_google_agenda
+from core.views.google_auth import GoogleLoginView, GoogleLinkView
+from core.views.meu_dia import MeuDiaView
 
 router = DefaultRouter()
 
@@ -33,6 +41,8 @@ router.register(r'tarefas', TarefaViewSet, basename='tarefas')
 router.register(r'microtarefas', MicroTarefaViewSet, basename='microtarefas')
 router.register(r'convites', ConviteProjetoViewSet, basename='convites')
 router.register(r'recursos', RecursoViewSet, basename='recursos')
+router.register(r'notas', NotaViewSet, basename='notas')
+router.register(r'notificacoes', NotificacaoViewSet, basename='notificacoes')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -52,8 +62,19 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', CustomTokenVerifyView.as_view(), name='token_verify'),
+    path('api/meu-dia/', MeuDiaView.as_view(), name='meu-dia'),
+    path('api/auth/google/', GoogleLoginView.as_view(), name='google-login'),
+    path('api/auth/google/vincular/', GoogleLinkView.as_view(), name='google-link'),
     # Registro de usuários
     path('api/registro/', UserRegistrationView.as_view(), name='user_registration'),
+    path('api/projetos/<int:pk>/calendario/', calendario, name='calendario-projeto'),
+    path('api/projetos/<int:pk>/calendario/<int:event_id>/', calendario_evento, name='calendario-evento'),
+    path('api/projetos/<int:pk>/google-agenda/', export_google_agenda, name='google-agenda'),
+    path('api/projetos/<int:pk>/agente/', ProjectAgentView.as_view(), name='agente-projeto'),
+    path('api/projetos/<int:pk>/atividades/', ProjectActivityView.as_view()),
+    path('api/tarefas/<int:pk>/atividades/', TaskActivityView.as_view()),
+    path('api/tarefas/<int:pk>/comentarios/', comentarios, name='comentarios-tarefa'),
+    path('api/tarefas/<int:pk>/comentarios/<int:comentario_id>/', comentario_detalhe, name='comentario-detalhe'),
     # API
     path('api/', include(router.urls)),
     path('api/media/', include(uploader_router.urls)),  # nova linha

@@ -6,3 +6,16 @@ from .microtarefas import MicroTarefa
 from .user import User
 
 from .recursos import Recurso
+
+from .google_identity import GoogleIdentity
+
+from .calendar_event import CalendarEvent
+
+from .atividade import Atividade
+
+from .comentario_tarefa import ComentarioTarefa
+
+from .nota import Nota
+
+from .notificacao import Notificacao
+from .alerta_prazo import AlertaPrazo

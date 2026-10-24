@@ -16,6 +16,7 @@ class UserSerializer(ModelSerializer):
         write_only=True,
     )
     profile_image = ImageSerializer(required=False, read_only=True)
+    google_photo_url = serializers.URLField(read_only=True)
 
     class Meta:
         model = User
@@ -24,7 +25,7 @@ class UserSerializer(ModelSerializer):
             'email',
             'name',
             'username',
-            'profile_image',
+            'profile_image', 'google_photo_url',
             'profile_image_attachment_key',
             'is_active',
             'is_staff',
@@ -41,7 +42,8 @@ class UserRegistrationSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'name', 'username', 'password', 'profile_image']
+        fields = ['id', 'email', 'name', 'username', 'password']
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)

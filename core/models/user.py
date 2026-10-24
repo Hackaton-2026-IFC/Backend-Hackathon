@@ -45,6 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True, verbose_name=_('email'), help_text=_('Email'))
     name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('name'), help_text=_('Name'))
     username = models.CharField(max_length=30, blank=True, null=True, verbose_name=_('username'), help_text=_('Username'))
+    google_photo_url = models.URLField(max_length=1000, blank=True, default='')
     profile_image = models.ForeignKey(
         Image,
         related_name='+',

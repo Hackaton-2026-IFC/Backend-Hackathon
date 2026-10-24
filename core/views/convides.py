@@ -1,6 +1,5 @@
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions, status
@@ -25,25 +24,17 @@ class ConviteProjetoViewSet(ModelViewSet):
     http_method_names = ['get', 'post', 'head', 'options']
 
     def get_queryset(self):
+        # Convites são privados: somente o usuário destinatário pode listá-los,
+        # visualizá-los ou respondê-los. Filtrar pelo projeto não deve ampliar
+        # essa visibilidade, mesmo quando o usuário é owner/admin.
         queryset = ConviteProjeto.objects.filter(
-            Q(usuario=self.request.user) | Q(projeto__membros__usuario=self.request.user)
-        ).distinct().order_by('-criado_em')
+            usuario=self.request.user
+        ).order_by('-criado_em', '-id')
         if self.action == 'responder':
-            # PostgreSQL proíbe SELECT ... FOR UPDATE combinado com DISTINCT.
-            # Mantemos a verificação de visibilidade numa subquery e bloqueamos
-            # somente a tabela de convites, sem JOIN/DISTINCT no SELECT externo.
-            return ConviteProjeto.objects.filter(
-                pk__in=queryset.values('pk')
-            ).select_for_update().order_by('-criado_em')
+            # Bloqueio na própria tabela, sem DISTINCT/JOIN, para evitar
+            # duas respostas simultâneas ao mesmo convite.
+            return queryset.select_for_update()
         return queryset
-
-    def get_object(self):
-        obj = super().get_object()
-        if obj.usuario == self.request.user:
-            return obj
-        if not obj.projeto.membros.filter(usuario=self.request.user).exists():
-            raise PermissionDenied('Você não faz parte do projeto.')
-        return obj
 
     def perform_create(self, serializer):
         projeto = serializer.validated_data['projeto']

@@ -1,4 +1,8 @@
 from django.http import Http404
+from django.db import transaction
+from core.services.atividade import registrar, snapshot
+from core.services.weather import forecast_for_task
+from core.services.notificacoes import notificar_membros_projeto
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions, status
@@ -39,19 +43,56 @@ class TarefaViewSet(ModelViewSet):
         projeto = serializer.validated_data.get('projeto')
         if projeto is None or not projeto.membros.filter(usuario=self.request.user).exists():
             raise PermissionDenied('Você precisa fazer parte do projeto para criar tarefas.')
-        serializer.save(criado_por=self.request.user)
+        task = serializer.save(criado_por=self.request.user)
+        registrar(task, self.request.user, 'tarefa_criada')
+        notificar_membros_projeto(
+            projeto=task.projeto,
+            ator=self.request.user,
+            tarefa=task,
+            tipo='tarefa_criada',
+            titulo='Nova tarefa',
+            mensagem=f'{self.request.user.name or self.request.user.email} criou a tarefa "{task.titulo}".',
+            link=f'/projects/{task.projeto_id}/tasks',
+        )
 
     def update(self, request, *args, **kwargs):
         self.get_object()
-        return super().update(request, *args, **kwargs)
+        with transaction.atomic():
+            before = snapshot(self.get_object())
+            response = super().update(request, *args, **kwargs)
+            task = self.get_object()
+            activity = registrar(task, request.user, 'tarefa_alterada', before, snapshot(task))
+            if activity is not None:
+                notificar_membros_projeto(
+                    projeto=task.projeto,
+                    ator=request.user,
+                    tarefa=task,
+                    tipo='tarefa_alterada',
+                    titulo='Tarefa atualizada',
+                    mensagem=f'{request.user.name or request.user.email} atualizou a tarefa "{task.titulo}".',
+                    link=f'/projects/{task.projeto_id}/tasks',
+                )
+            return response
 
     def partial_update(self, request, *args, **kwargs):
-        self.get_object()
+        # O DRF chama self.update() internamente; a auditoria ocorre somente lá.
         return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         self.get_object()
-        return super().destroy(request, *args, **kwargs)
+        task = self.get_object()
+        with transaction.atomic():
+            registrar(task, request.user, 'tarefa_excluida')
+            notificar_membros_projeto(
+                projeto=task.projeto,
+                ator=request.user,
+                tarefa=task,
+                tipo='tarefa_excluida',
+                titulo='Tarefa excluída',
+                mensagem=f'{request.user.name or request.user.email} excluiu a tarefa "{task.titulo}".',
+                link=f'/projects/{task.projeto_id}',
+            )
+            return super().destroy(request, *args, **kwargs)
 
 
     @action(detail=True, methods=['get', 'post'], url_path='recursos')
@@ -65,6 +106,11 @@ class TarefaViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(projeto=tarefa.projeto, tarefa=tarefa, adicionado_por=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'], url_path='clima')
+    def clima(self, request, pk=None):
+        tarefa = self.get_object()
+        return Response(forecast_for_task(tarefa))
 
     @action(detail=False, methods=['get'], url_path='kanban')
     def kanban(self, request):
