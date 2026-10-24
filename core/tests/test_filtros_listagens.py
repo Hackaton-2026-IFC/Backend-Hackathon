@@ -109,6 +109,11 @@ class FiltrosListagemTests(TestCase):
         }, format='json')
         self.assertEqual(invite.status_code, 201, invite.data)
         cid = invite.data['id']
+        # O remetente não pode visualizar convites destinados a outras pessoas.
+        self.assertEqual(self.ids(f'/api/convites/?projeto={self.projeto}&status=pendente'), [])
+        self.assertEqual(self.ids('/api/convites/?search=Alfa'), [])
+        self.assertEqual(self.ids(f'/api/convites/?projeto={self.outro_projeto}'), [])
+        # O destinatário conserva os filtros de projeto, status e busca.
+        self.client.force_authenticate(user=self.other)
         self.assertEqual(self.ids(f'/api/convites/?projeto={self.projeto}&status=pendente'), [cid])
         self.assertEqual(self.ids('/api/convites/?search=Alfa'), [cid])
-        self.assertEqual(self.ids(f'/api/convites/?projeto={self.outro_projeto}'), [])
