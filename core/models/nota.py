@@ -17,6 +17,8 @@ class Nota(models.Model):
     )
     titulo = models.CharField(max_length=200, blank=True, default='')
     conteudo = models.TextField(blank=True, default='')
+    link = models.URLField(max_length=2000, blank=True, default='')
+    imagem = models.ImageField(upload_to='notas/imagens/%Y/%m/', blank=True, null=True)
     cor = models.CharField(max_length=7, default='#FFF475')
     fixada = models.BooleanField(default=False)
     arquivada = models.BooleanField(default=False)
