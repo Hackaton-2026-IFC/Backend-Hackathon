@@ -91,5 +91,6 @@ class DetalhesProjetoConvitesTests(TestCase):
             f"/api/convites/{convite.data['id']}/responder/",
             {'acao': 'aceitar'}, format='json',
         )
-        self.assertEqual(resposta.status_code, 403)
+        # Convite de outra pessoa não deve sequer ser revelado por ID.
+        self.assertEqual(resposta.status_code, 404)
         self.assertFalse(ProjetoMembro.objects.filter(projeto_id=self.pid, usuario=self.outsider).exists())
