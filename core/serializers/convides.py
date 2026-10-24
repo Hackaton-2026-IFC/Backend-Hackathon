@@ -15,6 +15,9 @@ class ConviteProjetoSerializer(serializers.ModelSerializer):
         model = ConviteProjeto
         fields = ['id', 'projeto', 'usuario', 'enviado_por', 'cargo', 'status', 'criado_em', 'respondido_em']
         read_only_fields = ['id', 'enviado_por', 'status', 'criado_em', 'respondido_em']
+        # A unicidade condicional é validada na view e reforçada no banco.
+        # Evita UniqueTogetherValidator global, que rejeita reconvites históricos.
+        validators = []
 
 
     def validate_cargo(self, value):
