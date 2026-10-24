@@ -14,12 +14,14 @@ HEX_COLOR = re.compile(r'^#[0-9A-Fa-f]{6}$')
 class NotaSerializer(serializers.ModelSerializer):
     usuario = serializers.PrimaryKeyRelatedField(read_only=True)
     imagem_url = serializers.SerializerMethodField()
+    usuario_nome = serializers.CharField(source='usuario.name', read_only=True, allow_null=True)
 
     class Meta:
         model = Nota
         fields = [
             'id',
             'usuario',
+            'usuario_nome',
             'projeto',
             'titulo',
             'conteudo',
@@ -34,7 +36,7 @@ class NotaSerializer(serializers.ModelSerializer):
             'criada_em',
             'atualizada_em',
         ]
-        read_only_fields = ['id', 'usuario', 'imagem_url', 'criada_em', 'atualizada_em']
+        read_only_fields = ['id', 'usuario', 'usuario_nome', 'imagem_url', 'criada_em', 'atualizada_em']
         extra_kwargs = {'imagem': {'write_only': True, 'required': False, 'allow_null': True}}
 
     def get_imagem_url(self, obj):
