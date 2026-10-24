@@ -19,3 +19,5 @@ from .nota import Nota
 
 from .notificacao import Notificacao
 from .alerta_prazo import AlertaPrazo
+
+from .nota_preferencia import NotaPreferencia
