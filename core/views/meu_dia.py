@@ -49,7 +49,8 @@ class MeuDiaView(APIView):
 
     def get(self, request):
         qs = Tarefa.objects.filter(projeto__membros__usuario=request.user).exclude(
-            status=Tarefa.STATUS_CONCLUIDO).distinct().prefetch_related(
+            status=Tarefa.STATUS_CONCLUIDO).distinct().select_related(
+            'projeto', 'responsavel', 'criado_por').prefetch_related(
             'dependencias', 'tarefas_dependentes', 'microtarefas')
         # Por padrão, tarefas atribuídas ao usuário ou sem responsável.
         if request.query_params.get('equipe') != 'true':
