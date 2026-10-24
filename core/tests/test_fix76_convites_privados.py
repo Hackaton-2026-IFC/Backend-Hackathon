@@ -38,6 +38,22 @@ class ConvitesPrivadosTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual([row['id'] for row in self._results(response)], [self.alice_invite.pk])
 
+    def test_invite_contains_project_identity_and_sender_name(self):
+        self.owner.name = 'Pessoa que convidou'
+        self.owner.save(update_fields=['name'])
+        self.project.cor = '#C02424'
+        self.project.icone = 'school'
+        self.project.save(update_fields=['cor', 'icone'])
+        self._login(self.alice)
+        response = self.client.get('/api/convites/')
+        self.assertEqual(response.status_code, 200)
+        invite = self._results(response)[0]
+        self.assertEqual(invite['projeto'], self.project.pk)
+        self.assertEqual(invite['projeto_nome'], 'Projeto confidencial')
+        self.assertEqual(invite['projeto_cor'], '#C02424')
+        self.assertEqual(invite['projeto_icone'], 'school')
+        self.assertEqual(invite['enviado_por_nome'], 'Pessoa que convidou')
+
     def test_owner_and_admin_do_not_see_other_peoples_invites(self):
         for user in (self.owner, self.other):
             with self.subTest(user=user.email):
