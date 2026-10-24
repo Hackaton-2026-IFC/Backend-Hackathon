@@ -29,3 +29,9 @@ class MeuDiaTests(TestCase):
         self.assertEqual(response.data['total_pendentes'], 3)
         self.assertEqual(len(response.data['recomendacoes']), 2)
         self.assertTrue(all(x['tarefa']['projeto'] == self.project.pk for x in response.data['recomendacoes']))
+
+    def test_invalid_limit_uses_default(self):
+        Tarefa.objects.create(projeto=self.project, titulo='Uma tarefa')
+        response = self.client.get('/api/meu-dia/?limite=invalido')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['recomendacoes']), 1)
