@@ -1,6 +1,6 @@
 from datetime import date
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, prefetch_related_objects
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -51,7 +51,7 @@ class MeuDiaView(APIView):
         qs = Tarefa.objects.filter(projeto__membros__usuario=request.user).exclude(
             status=Tarefa.STATUS_CONCLUIDO).distinct().select_related(
             'projeto', 'responsavel', 'criado_por').prefetch_related(
-            'dependencias', 'tarefas_dependentes', 'microtarefas')
+            'dependencias', 'tarefas_dependentes')
         # Por padrão, tarefas atribuídas ao usuário ou sem responsável.
         if request.query_params.get('equipe') != 'true':
             qs = qs.filter(Q(responsavel=request.user) | Q(responsavel__isnull=True))
@@ -59,6 +59,9 @@ class MeuDiaView(APIView):
         evaluated = [(task, *evaluate(task, today)) for task in qs]
         evaluated.sort(key=lambda x: (-x[1], x[0].data_limite or date.max, x[0].pk))
         count = min(max(int(request.query_params.get('limite', 10)), 1), 50) if request.query_params.get('limite', '10').isdigit() else 10
+        selected = evaluated[:count]
+        # Carregar microtarefas apenas das recomendações devolvidas, não de todas as candidatas.
+        prefetch_related_objects([task for task, *_ in selected], 'microtarefas')
         return Response({
             'data': today.isoformat(),
             'total_pendentes': len(evaluated),
@@ -68,5 +71,5 @@ class MeuDiaView(APIView):
                 'pontuacao': score,
                 'bloqueada': blocked,
                 'motivos': reasons,
-            } for task, score, blocked, reasons in evaluated[:count]],
+            } for task, score, blocked, reasons in selected],
         })
