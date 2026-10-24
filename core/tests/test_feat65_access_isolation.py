@@ -32,3 +32,8 @@ class AccessIsolationTests(TestCase):
     def test_outsider_cannot_read_task_comments(self):
         response = self.client.get(f'/api/tarefas/{self.task.pk}/comentarios/')
         self.assertIn(response.status_code, (403, 404))
+
+    def test_anonymous_cannot_read_project_feed(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(f'/api/projetos/{self.project.pk}/atividades/')
+        self.assertIn(response.status_code, (401, 403))
