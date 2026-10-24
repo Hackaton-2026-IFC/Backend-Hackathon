@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from core.models import Tarefa
@@ -33,7 +34,8 @@ def processar_alertas_prazo(hoje=None):
     tarefas = Tarefa.objects.exclude(status=Tarefa.STATUS_CONCLUIDO).filter(
         concluida=False,
     ).filter(
-        data_limite__isnull=False,
+    ).filter(
+        Q(data_limite__isnull=False) | Q(prazo_antecipado__isnull=False),
     ).select_related('projeto', 'responsavel')
 
     for tarefa in tarefas.iterator():

@@ -90,3 +90,12 @@ class DeadlineAlertTests(TestCase):
         output = StringIO()
         call_command('processar_prazos', data=self.today.isoformat(), stdout=output)
         self.assertIn('Alertas gerados', output.getvalue())
+
+    def test_alerta_com_apenas_prazo_antecipado(self):
+        task = Tarefa.objects.create(
+            projeto=self.project, titulo='Meta sem prazo oficial',
+            prazo_antecipado=self.today, responsavel=self.member,
+        )
+        self.assertEqual(processar_alertas_prazo(self.today)['hoje'], 1)
+        self.assertEqual(processar_alertas_prazo(self.today)['hoje'], 0)
+        self.assertEqual(AlertaPrazo.objects.filter(tarefa=task).count(), 1)
