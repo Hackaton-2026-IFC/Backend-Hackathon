@@ -53,6 +53,13 @@ class ConviteProjetoViewSet(ModelViewSet):
         if projeto.membros.filter(usuario=usuario).exists():
             raise ValidationError({'usuario': 'Este usuário já faz parte do projeto.'})
 
+        if ConviteProjeto.objects.filter(
+            projeto=projeto,
+            usuario=usuario,
+            status=ConviteProjeto.STATUS_PENDENTE,
+        ).exists():
+            raise ValidationError({'usuario': 'Este usuário já possui um convite pendente para este projeto.'})
+
         serializer.save(enviado_por=self.request.user)
 
     @transaction.atomic
