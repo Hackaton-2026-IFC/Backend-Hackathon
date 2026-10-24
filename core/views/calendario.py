@@ -9,6 +9,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ValidationErro
 from rest_framework.response import Response
 from core.models import Projeto, Tarefa
 from core.models.calendar_event import CalendarEvent
+from core.models.google_calendar_export import GoogleCalendarExport
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,6 +53,12 @@ def calendario(request, pk):
         raise ValidationError({'fim': 'Intervalo deve ter entre 0 e 366 dias.'})
     events = list(CalendarEvent.objects.filter(projeto=project, data__range=(start, end)).values(
         'id', 'titulo', 'descricao', 'data', 'hora_inicio', 'hora_fim', 'localizacao'))
+    exported = GoogleCalendarExport.objects.filter(usuario=request.user, evento_id__in=[item['id'] for item in events])
+    by_event = {entry.evento_id: entry for entry in exported}
+    for item in events:
+        record = by_event.get(item['id'])
+        item['exportado_google'] = bool(record)
+        item['google_event_url'] = record.google_event_url if record else None
     tasks = list(Tarefa.objects.filter(projeto=project).filter(
         Q(data_limite__range=(start,end)) | Q(prazo_antecipado__range=(start,end))
     ).values('id','titulo','status','data_limite','prazo_antecipado','clima_influencia','localizacao'))
@@ -91,6 +98,9 @@ def export_google_agenda(request, pk):
     event = CalendarEvent.objects.filter(pk=event_id, projeto=project).first()
     if not event:
         raise NotFound('Evento não encontrado no projeto.')
+    existing = GoogleCalendarExport.objects.filter(evento=event, usuario=request.user).first()
+    if existing:
+        return Response({'id': existing.google_event_id, 'htmlLink': existing.google_event_url, 'ja_exportado': True}, status=200)
     try:
         info_response = requests.get('https://www.googleapis.com/oauth2/v3/tokeninfo', params={'access_token': token}, timeout=6)
         info_response.raise_for_status()
@@ -124,6 +134,16 @@ def export_google_agenda(request, pk):
         if result.status_code not in (200, 201):
             return Response({'detail': 'Não foi possível exportar para o Google Agenda.'}, status=502)
         data = result.json()
-        return Response({'id': data.get('id'), 'htmlLink': data.get('htmlLink')}, status=201)
+        google_id = data.get('id')
+        if not isinstance(google_id, str) or not google_id:
+            return Response({'detail': 'O Google não confirmou o identificador do evento.'}, status=502)
+        google_url = data.get('htmlLink', '')
+        if not isinstance(google_url, str):
+            google_url = ''
+        GoogleCalendarExport.objects.get_or_create(
+            evento=event, usuario=request.user,
+            defaults={'google_event_id': google_id, 'google_event_url': google_url[:2000]},
+        )
+        return Response({'id': google_id, 'htmlLink': google_url, 'ja_exportado': False}, status=201)
     except requests.RequestException:
         return Response({'detail': 'Google Agenda indisponível. Tente novamente.'}, status=502)

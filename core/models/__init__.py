@@ -21,3 +21,5 @@ from .notificacao import Notificacao
 from .alerta_prazo import AlertaPrazo
 
 from .nota_preferencia import NotaPreferencia
+
+from .google_calendar_export import GoogleCalendarExport
